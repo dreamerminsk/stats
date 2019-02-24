@@ -14,6 +14,13 @@ def insert_category(category):
         print(ex)
 
 
+def get_forums():
+    try:
+        rows = _db.execute('select * from forums;')
+        return rows.fetchall()
+    except Exception as ex:
+        print(ex)
+
 
 
 def get_torrent():

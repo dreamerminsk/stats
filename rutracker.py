@@ -1,8 +1,7 @@
+import pickle
+
 import requests
 from bs4 import BeautifulSoup
-import time
-import pickle
-import utils
 
 LOGIN_URL = 'https://rutracker.org/forum/login.php'
 TOPIC_URL = 'https://rutracker.org/forum/viewtopic.php?t='
@@ -10,11 +9,11 @@ USER_URL = 'https://rutracker.org/forum/profile.php?mode=viewprofile&u='
 FORUM_URL = 'https://rutracker.org/forum/viewforum.php?f='
 
 
-
 def load_cookies():
     with open('cookie.dat', 'rb') as f:
         cookies = pickle.load(f)
     return cookies
+
 
 def save_cookies(cookies):
     with open('cookie.dat', 'wb') as f:
@@ -28,8 +27,10 @@ def is_auth(doc):
     else:
         return False
 
+
 s = requests.Session()
 s.cookies = load_cookies()
+
 
 def login():
     res2 = s.post(LOGIN_URL, data={'login_username': 'dreamer.by', 'login_password': 'x1shT', 'login': 'вход'})
@@ -59,6 +60,7 @@ def get_page(ref):
         return (doc, None)
     except Exception as ex:
         return (None, ex)
+
 
 def get_forum(id):
     url = FORUM_URL + str(id)

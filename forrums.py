@@ -1,7 +1,8 @@
-import requests
-from bs4 import BeautifulSoup
 import sqlite3
 import time
+
+import requests
+from bs4 import BeautifulSoup
 
 
 def get_forum(index):
@@ -16,10 +17,10 @@ def get_forum(index):
     for item in doc.select('.w100.pad_2 a'):
         href = item.get('href')
         if '?c=' in href:
-            cat = href[href.find('?c=')+3:]
+            cat = href[href.find('?c=') + 3:]
             cat_title = item.text.strip()
             print(cat_title)
-    return (index, cat, title, 0)
+    return index, cat, title, 0
 
 
 db = sqlite3.connect('releases.db', detect_types=sqlite3.PARSE_DECLTYPES)
@@ -28,13 +29,12 @@ db = sqlite3.connect('releases.db', detect_types=sqlite3.PARSE_DECLTYPES)
 def update(forum):
     try:
         db.execute("update forums set category=?, title=? where id=?",
-        (forum[1], forum[2], forum[0],))
+                   (forum[1], forum[2], forum[0],))
         db.commit()
         cur = db.execute('select * from forums where id=?', (forum[0],))
         print('  update <', cur.fetchone(), '>')
     except Exception as ex:
         print(ex)
-
 
 
 def store(forum):
@@ -48,7 +48,8 @@ def store(forum):
     except Exception as ex:
         print(ex)
 
-r= [560,794,793,556,436,969,2307,2308,2309,2310,2311,557,558]
+
+r = [560, 794, 793, 556, 436, 969, 2307, 2308, 2309, 2310, 2311, 557, 558]
 for i in range(2540, 2700):
     forum = get_forum(i)
     if forum[2]:

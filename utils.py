@@ -1,18 +1,20 @@
 import datetime
 
+
 def split(text, delim=' '):
-    words=[]
-    word=[]
+    words = []
+    word = []
     for l in text:
         if l not in delim:
             word.append(l)
         else:
             if word:
                 words.append(''.join(word))
-                word=[]
+                word = []
     if word:
         words.append(''.join(word))
     return words
+
 
 months = {
     'Янв': 1,
@@ -29,6 +31,7 @@ months = {
     'Дек': 12,
 }
 
+
 def parse_date(date_str):
     y = 2000 + int(date_str[7:9])
     m = months[date_str[3:6]]
@@ -37,6 +40,7 @@ def parse_date(date_str):
     mn = int(date_str[13:15])
     dt = datetime.datetime(y, m, d, h, mn)
     return dt
+
 
 def extract_int(value):
     num = '0'

@@ -1,96 +1,79 @@
-import sqlite3
+﻿import sys
+from datetime import datetime
 
-from PySide2.QtCore import QThread
+from PySide2.QtCore import QThread, QTimer
+from PySide2.QtCore import Signal
 from PySide2.QtSql import QSqlDatabase, QSqlQuery
+from PySide2.QtWidgets import QApplication, QMainWindow
+from PySide2.QtWidgets import QTreeWidget, QTreeWidgetItem
+from PySide2.QtWidgets import QWidget, QTableWidget, QTableWidgetItem, QVBoxLayout
 
-_db = sqlite3.connect('video.db', detect_types=sqlite3.PARSE_DECLTYPES)
-_db.row_factory = sqlite3.Row
-
-
-def insert_category(category):
-    try:
-        _db.execute('insert into categories(id, title) values(?, ?)', (category['id'], category['title'],))
-        _db.commit()
-    except Exception as ex:
-        print(ex)
+import rutracker
 
 
-def get_forums():
-    try:
-        rows = _db.execute('select * from forums;')
-        return rows.fetchall()
-    except Exception as ex:
-        print(ex)
+class TorrentsWidget(QWidget):
+    newtorrents = Signal(int)
+
+    def __init__(self):
+        QWidget.__init__(self)
+        l = QVBoxLayout(self)
+        self.t = QTableWidget(0, 4, self)
+        l.addWidget(self.t)
+        self.setLayout(l)
+        self.ds = DataSource()
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.process)
+        self.timer.start(4368)
+        self.torrents = 0
+
+    def process(self):
+        t = self.ds.get_torrent()
+        print(t)
+        if 'id' not in t:
+            return
+        doc, error = rutracker.get_topic(t['id'])
+        if error is not None:
+            print(error)
+            return
+        parser = TorrentParser()
+        topic = parser.parse(doc)
+        topic['id'] = t['id']
+        self.ds.insert_torrent(topic)
+        self.torrents += 1
+        self.newtorrents.emit(self.torrents)
+        row = self.t.rowCount()
+        self.t.setRowCount(row + 1)
+        self.t.setItem(row, 0, QTableWidgetItem(str(datetime.now())))
+        self.t.setItem(row, 1, QTableWidgetItem(str(topic['downloads'])))
+        self.t.setItem(row, 2, QTableWidgetItem(str(topic['title'])))
+        self.t.setItem(row, 3, QTableWidgetItem(str(topic['published'])))
 
 
-def get_users():
-    try:
-        rows = _db.execute('select * from users;')
-        return rows.fetchall()
-    except Exception as ex:
-        print(ex)
+class DataSource():
 
-
-def insert_user(u):
-    try:
-        _db.execute('insert into users values(?, ?, ?, ?)', (u['id'], u['name'], u['registered'], u['nation'],))
-        _db.commit()
-    except Exception as ex:
-        print(ex)
-
-
-def get_torrent():
-    try:
-        rows = _db.execute('select * from torrents where last_checked is null order by id desc limit 1')
-        return rows.fetchone()
-    except Exception as ex:
-        print(ex)
-
-
-def get_check_torrent():
-    try:
-        rows = _db.execute('select * from torrents_next_checking limit 1')
-        return rows.fetchone()
-    except Exception as ex:
-        print(ex)
-
-
-def update_torrent(t):
-    try:
-        _db.execute('''update torrents set title=?,forum=?,hash=?,seed=?,leech=?,downloads=?,
-            published=?, last_modified=?, last_checked=?, user_id=? where id=?''',
-                    (t['title'], t['forum'], t['hash'], t['seed'], t['leech'], t['downloads'],
-                     t['published'], t['last_modified'], t['last_checked'], t['user_id'], t['id'],))
-        _db.commit()
-    except Exception as ex:
-        print(ex)
-
-
-class DataSource:
-
-    @staticmethod
-    def get_db():
+    def get_db(self):
         name = "db-" + str(QThread.currentThread())
         if QSqlDatabase.contains(name):
             return QSqlDatabase.database(name)
         else:
-            # print('NAME: ' + name)
             db = QSqlDatabase.addDatabase("QSQLITE", name)
             db.setDatabaseName("video.db")
             return db
 
-    def rss(self):
+    def get_categories(self):
         db = self.get_db()
         try:
             if not db.isOpen():
                 db.open()
-            query = QSqlQuery(query="select * from forums_to_scan_2 limit 1;", db=db)
+            cs = list()
+            query = QSqlQuery(query="select * from categories;", db=db)
             forum = {}
             while query.next():
-                forum['id'] = query.value(0)
-                forum['title'] = query.value(3)
-                forum['delta'] = query.value('delta')
-            return forum
+                c = {}
+                c['id'] = query.value(0)
+                c['title'] = query.value(1)
+                cs.append(c)
+            return cs
         except Exception as ex:
             print(str(ex))
         finally:
@@ -166,8 +149,7 @@ class DataSource:
                 db.open()
             query = QSqlQuery(db=db)
             query.prepare(
-                'update torrents set forum=:f, title=:t, seed=:seed, leech=:leech, published=:pub, last_modified=:lm, '
-                'hash=:hash, downloads=:d, last_checked=:lc, user_id=:user where id=:id')
+                'update torrents set forum=:f, title=:t, seed=:seed, leech=:leech, published=:pub, last_modified=:lm, hash=:hash, downloads=:d, last_checked=:lc, user_id=:user where id=:id')
             query.bindValue(':id', torrent['id'])
             query.bindValue(':f', torrent['forum'])
             query.bindValue(':t', torrent['title'])
@@ -202,3 +184,29 @@ class DataSource:
             return False
         finally:
             db.close()
+
+
+class MyWindow(QMainWindow):
+
+    def __init__(self):
+        QMainWindow.__init__(self)
+        self.setWindowTitle("RuTracker.org")
+        self.setGeometry(200, 200, 640, 480)
+        self.tree = QTreeWidget(self)
+        self.setCentralWidget(self.tree)
+        self.ds = DataSource()
+        cs = self.ds.get_categories()
+        for c in cs:
+            i = QTreeWidgetItem(self.tree)
+            i.setText(0, c['title'])
+            self.tree.addTopLevelItem(i)
+
+    def closeEvent(self, event):
+        event.accept()
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    label = MyWindow()
+    label.show()
+    sys.exit(app.exec_())

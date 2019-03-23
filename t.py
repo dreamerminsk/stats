@@ -1,13 +1,12 @@
-import requests
-from bs4 import BeautifulSoup
-from urllib.parse import urlparse, parse_qs
-import rutracker
-import utils
-import source
 import datetime
-import time
-import random
 import math
+import random
+import time
+from urllib.parse import urlparse, parse_qs
+
+import rutracker
+import source
+import utils
 
 
 def get_title(doc):
@@ -147,7 +146,7 @@ start = datetime.datetime.now()
 source._db.execute('insert into task_checked(start, finish, count, diff, stddev) values(?, ?, ?, ?, ?)', (start, start, 0, 0, 0,))
 source._db.commit()
 while True:
-    if items > 256:
+    if items > 1024:
         break
     print('---------------------')
     now = datetime.datetime.now()

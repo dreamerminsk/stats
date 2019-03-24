@@ -1,16 +1,18 @@
 ﻿import sys
 from datetime import datetime
+from typing import Dict, Any
 from urllib.parse import urlparse, parse_qs
 
 import requests
-from PySide2.QtCore import QThread, QTimer, Signal, Slot, Qt, QModelIndex, QAbstractTableModel
-from PySide2.QtSql import QSqlDatabase, QSqlQuery
+from PySide2.QtCore import QTimer, Signal, Slot, Qt, QModelIndex, QAbstractTableModel, QThread, QAbstractItemModel
 from PySide2.QtWidgets import QApplication, QMainWindow, QLabel, QTabWidget, QListWidget, QSplitter, QTableView
 from PySide2.QtWidgets import QWidget, QTableWidget, QTableWidgetItem, QVBoxLayout
 from bs4 import BeautifulSoup
 
 import rutracker
 import utils
+from source import DataSource
+from workers import RssWorker
 
 
 class TorrentParser:
@@ -243,142 +245,137 @@ class Torrents2Widget(QWidget):
         self.listmodel.addItem(str(topic['published'])[:7])
 
 
-class DataSource:
+class RssCategoryItem:
 
-    @staticmethod
-    def get_db():
-        name = "db-" + str(QThread.currentThread())
-        if QSqlDatabase.contains(name):
-            return QSqlDatabase.database(name)
+    def __init__(self, category, forums, topics):
+        self.category = category
+        self.forums = forums
+        self.topics = topics
+
+
+class RssCategoryModel(QAbstractItemModel):
+    cats: Dict[Any, Any]
+
+    def canFetchMore(self, parent):
+        return False
+
+    def columnCount(self, parent=None, *args, **kwargs):
+        return 3
+
+    def data(self, index, role=None):
+        if role == Qt.DisplayRole:
+            catname = ''
+            for i, key in enumerate(self.cats.keys()):
+                if i == index.row():
+                    catname = key
+            if index.column() == 0:
+                return self.cats[catname].category
+            elif index.column() == 1:
+                return self.cats[catname].forums
+            elif index.column() == 2:
+                return self.cats[catname].topics
+            else:
+                return None
+        return None
+
+    def fetchMore(self, parent):
+        pass
+
+    def hasChildren(self, parent=None, *args, **kwargs):
+        pass
+
+    def headerData(self, section, orientation, role=None):
+        if role == Qt.DisplayRole & orientation == Qt.Horizontal:
+            return self.headers[section]
+        return None
+
+    def index(self, row, column, parent=None, *args, **kwargs):
+        if not parent.isValid():
+            catname = ''
+            for i, key in enumerate(self.cats.keys()):
+                if i == row:
+                    catname = key
+            return self.createIndex(row, column, self.cats[catname])
+        return QModelIndex()
+
+    def insertRow(self, row, parent=None, *args, **kwargs):
+        pass
+
+    def insertRows(self, row, count, parent=None, *args, **kwargs):
+        pass
+
+    def itemData(self, index):
+        return {}
+
+    def parent(self, child):
+        return QModelIndex()
+
+    def rowCount(self, parent=None, *args, **kwargs):
+        return len(self.cats)
+
+    def setData(self, index, value, role=None):
+        return False
+
+    def setItemData(self, index, roles):
+        return False
+
+    def sort(self, column, order=None):
+        pass
+
+    def addCategory(self, category, torrents):
+        if category in self.cats:
+            self.beginResetModel()
+            self.cats[category].forums += 1
+            self.cats[category].topics += torrents
+            self.endResetModel()
         else:
-            print('NAME: ' + name)
-            db = QSqlDatabase.addDatabase("QSQLITE", name)
-            db.setDatabaseName("video.db")
-            return db
+            self.beginInsertRows(QModelIndex(), len(self.cats), len(self.cats))
+            item = RssCategoryItem(category, 1, torrents)
+            self.cats[category] = item
+            self.endInsertRows()
 
-    def rss(self):
-        db = self.get_db()
-        try:
-            if not db.isOpen():
-                db.open()
-            query = QSqlQuery(query="select * from forums_to_scan_2 limit 1;", db=db)
-            forum = {}
-            while query.next():
-                forum['id'] = query.value(0)
-                forum['title'] = query.value(3)
-                forum['delta'] = query.value('delta')
-            return forum
-        except Exception as ex:
-            print(str(ex))
-        finally:
-            db.close()
+    def __init__(self):
+        QAbstractItemModel.__init__(self)
+        self.headers = ['Category', 'Forums', 'Topics']
+        self.categories = []
+        self.cats = dict()
 
-    def get_torrent(self):
-        db = self.get_db()
-        try:
-            if not db.isOpen():
-                db.open()
-            query = QSqlQuery(query="select * from torrents where last_checked is null order by id desc limit 1;",
-                              db=db)
-            topic = {}
-            while query.next():
-                topic['id'] = query.value('id')
-                topic['forum'] = query.value('forum')
-                topic['title'] = query.value('title')
-                topic['seed'] = query.value('seed')
-                topic['leech'] = query.value('leech')
-                topic['published'] = query.value('published')
-                topic['last_modified'] = query.value('last_modified')
-                topic['hash'] = query.value('hash')
-                topic['downloads'] = query.value('downloads')
-                topic['last_checked'] = query.value('last_checked')
-                topic['user_id'] = query.value('user_id')
-            return topic
-        finally:
-            db.close()
 
-    def get_check_torrent(self):
-        db = self.get_db()
-        try:
-            if not db.isOpen():
-                db.open()
-            query = QSqlQuery(query="select * from torrents_next_checking limit 1;", db=db)
-            topic = {}
-            while query.next():
-                topic['id'] = query.value('id')
-                topic['forum'] = query.value('forum')
-                topic['title'] = query.value('title')
-                topic['seed'] = query.value('seed')
-                topic['leech'] = query.value('leech')
-                topic['published'] = query.value('published')
-                topic['last_modified'] = query.value('last_modified')
-                topic['hash'] = query.value('hash')
-                topic['downloads'] = query.value('downloads')
-                topic['last_checked'] = query.value('last_checked')
-                topic['user_id'] = query.value('user_id')
-            return topic
-        finally:
-            db.close()
+class RssWidget(QWidget):
+    newtorrents = Signal(int)
 
-    def save_torrent(self, torrent):
-        db = self.get_db()
-        try:
-            if not db.isOpen():
-                db.open()
-            query = QSqlQuery(db=db)
-            query.prepare('insert into torrents(id, forum, title) values(:id, :f, :t)')
-            query.bindValue(':id', torrent[0])
-            query.bindValue(':f', torrent[1])
-            query.bindValue(':t', torrent[2])
-            return query.exec_()
-        except Exception as ex:
-            return False
-        finally:
-            db.close()
+    def __init__(self):
+        QWidget.__init__(self)
+        layout = QVBoxLayout(self)
+        self.splitter = QSplitter(self)
+        self.cat_table = QTableView(self)
+        self.cat_model = RssCategoryModel()
+        self.cat_table.setModel(self.cat_model)
+        self.splitter.addWidget(self.cat_table)
+        self.t = QTableWidget(0, 4, self)
+        self.splitter.addWidget(self.t)
+        layout.addWidget(self.splitter)
+        self.setLayout(layout)
+        self.ds = DataSource()
+        self.worker = RssWorker()
+        self.worker_thread = QThread()
+        self.worker_thread.started.connect(self.worker.run)
+        self.worker.finished.connect(self.worker_thread.quit)
+        self.worker.moveToThread(self.worker_thread)
+        self.worker_thread.start()
+        self.worker.processed.connect(self.processed)
 
-    def insert_torrent(self, torrent):
-        db = self.get_db()
-        try:
-            if not db.isOpen():
-                db.open()
-            query = QSqlQuery(db=db)
-            query.prepare(
-                'update torrents set forum=:f, title=:t, seed=:seed, leech=:leech, published=:pub, last_modified=:lm, '
-                'hash=:hash, downloads=:d, last_checked=:lc, user_id=:user where id=:id')
-            query.bindValue(':id', torrent['id'])
-            query.bindValue(':f', torrent['forum'])
-            query.bindValue(':t', torrent['title'])
-            query.bindValue(':seed', torrent['seed'])
-            query.bindValue(':leech', torrent['leech'])
-            query.bindValue(':pub', str(torrent['published']))
-            query.bindValue(':lm', str(torrent['last_modified']))
-            query.bindValue(':hash', torrent['hash'])
-            query.bindValue(':d', torrent['downloads'])
-            query.bindValue(':lc', str(torrent['last_checked']))
-            query.bindValue(':user', torrent['user_id'])
-            return query.exec_()
-        except Exception as ex:
-            return False
-        finally:
-            db.close()
+    @Slot(int, int)
+    def processed(self, forum_id, torrents):
+        forum = self.ds.get_forum(forum_id)
+        print(forum)
+        cat = self.ds.get_category(forum['category'])
+        self.cat_model.addCategory(cat['title'], torrents)
 
-    def update_rss(self, f, d, ls):
-        db = self.get_db()
-        try:
-            if not db.isOpen():
-                db.open()
-            query = QSqlQuery(db=db)
-            query.prepare('update forums_rss set last_scanned=:ls, delta=:d where id=:id')
-            query.bindValue(':ls', str(ls))
-            query.bindValue(':d', d)
-            query.bindValue(':id', f)
-            query.exec_()
-            db.close()
-            return True
-        except Exception as ex:
-            return False
-        finally:
-            db.close()
+    def finish(self):
+        self.worker.finish()
+        self.worker_thread.quit()
+        self.worker_thread.wait()
 
 
 class MyWindow(QMainWindow):
@@ -390,10 +387,8 @@ class MyWindow(QMainWindow):
         self.tabwidget = QTabWidget()
         self.rsslbl = QLabel("RSS")
         self.rsslist = QListWidget(self)
-        self.rsstable = QTableWidget(self)
-        self.rsstable.setColumnCount(5)
-        self.rsstable.setRowCount(0)
-        self.tabwidget.addTab(self.rsstable, "rss")
+        self.rss = RssWidget()
+        self.tabwidget.addTab(self.rss, "rss")
         self.twidget = TorrentsWidget()
         self.twidget.newtorrents.connect(self.update_tab_1)
         self.tabwidget.addTab(self.twidget, "new torrents")
@@ -401,11 +396,6 @@ class MyWindow(QMainWindow):
         self.t2widget.newtorrents.connect(self.update_tab_2)
         self.tabwidget.addTab(self.t2widget, "check torrents")
         self.setCentralWidget(self.tabwidget)
-        self.counter = 0
-        self.rss_total = 0
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.process)
-        self.timer.start(8000)
         self.ds = DataSource()
 
     @Slot(int)
@@ -430,50 +420,13 @@ class MyWindow(QMainWindow):
         (doc, error) = self.get_page(ref)
         return doc, error
 
-    def process(self):
-        print('rss')
-        self.counter += 1
-        torrents = 0
-        f = self.ds.rss()
-        if 'id' not in f:
-            # self.rsslist.addItem(str(datetime.now()))
-            # self.rsslist.scrollToBottom()
-            return
-        doc, error = self.get_rss(f)
-        if error is not None:
-            print(error)
-        for entry in doc.find_all('entry'):
-            url = entry.find('link')
-            q = urlparse(url.get('href')).query
-            ps = parse_qs(q)
-            torrent = (ps['t'][0], f['id'], entry.find('title').text,)
-            # self.rsslist.addItem('\t' + torrent[2])
-            if self.ds.save_torrent(torrent):
-                torrents += 1
-        # self.rsslist.scrollToBottom()
-        delta = f['delta']
-        if torrents > 0:
-            self.rss_total += torrents
-            delta = delta * 0.9
-            self.ds.update_rss(f['id'], delta, datetime.now())
-        else:
-            delta = delta * 1.1
-            self.ds.update_rss(f['id'], delta, datetime.now())
-        row = self.rsstable.rowCount()
-        self.rsstable.setRowCount(row + 1)
-        self.rsstable.setItem(row, 0, QTableWidgetItem(str(datetime.now())))
-        self.rsstable.setItem(row, 1, QTableWidgetItem(str(f['id'])))
-        self.rsstable.setItem(row, 2, QTableWidgetItem(f['title']))
-        self.rsstable.setItem(row, 3, QTableWidgetItem(str(torrents)))
-        self.rsstable.setItem(row, 4, QTableWidgetItem(str(delta)))
-        self.tabwidget.setTabText(0, 'rss /' + str(self.rsstable.rowCount()) + ', ' + str(self.rss_total) + '/')
-
     def closeEvent(self, event):
+        self.rss.finish()
         event.accept()
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    label = MyWindow()
-    label.show()
+    window = MyWindow()
+    window.show()
     sys.exit(app.exec_())

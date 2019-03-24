@@ -1,4 +1,5 @@
 import sqlite3
+from typing import Optional, Dict, Any
 
 from PySide2.QtCore import QThread
 from PySide2.QtSql import QSqlDatabase, QSqlQuery
@@ -74,12 +75,11 @@ class DataSource:
         if QSqlDatabase.contains(name):
             return QSqlDatabase.database(name)
         else:
-            # print('NAME: ' + name)
             db = QSqlDatabase.addDatabase("QSQLITE", name)
             db.setDatabaseName("video.db")
             return db
 
-    def rss(self):
+    def get_forum_to_scan(self):
         db = self.get_db()
         try:
             if not db.isOpen():
@@ -93,6 +93,41 @@ class DataSource:
             return forum
         except Exception as ex:
             print(str(ex))
+        finally:
+            db.close()
+
+    def get_category(self, id):
+        db = self.get_db()
+        try:
+            if not db.isOpen():
+                db.open()
+            query = QSqlQuery(db=db)
+            query.prepare("select * from categories where id=:id;")
+            query.bindValue(':id', id)
+            query.exec_()
+            category: Dict[str, Optional[Any]] = {}
+            while query.next():
+                category['id'] = query.value('id')
+                category['title'] = query.value('title')
+            return category
+        finally:
+            db.close()
+
+    def get_forum(self, id):
+        db = self.get_db()
+        try:
+            if not db.isOpen():
+                db.open()
+            query = QSqlQuery(db=db)
+            query.prepare("select * from forums where id=:id;")
+            query.bindValue(':id', id)
+            query.exec_()
+            forum: Dict[str, Optional[Any]] = {}
+            while query.next():
+                forum['id'] = query.value('id')
+                forum['category'] = query.value('category')
+                forum['title'] = query.value('title')
+            return forum
         finally:
             db.close()
 

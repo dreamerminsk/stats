@@ -1,4 +1,5 @@
 from datetime import datetime
+from time import sleep
 from urllib.parse import urlparse, parse_qs
 
 import requests
@@ -9,11 +10,13 @@ from source import DataSource
 
 
 class RssWorker(QObject):
-    finish = Signal(dict)
+    processed = Signal(int, int)
+    finished = Signal()
 
     def __init__(self):
         QObject.__init__(self)
         self.ds = DataSource()
+        self.terminating = False
 
     def get_page(self, ref):
         try:
@@ -29,13 +32,22 @@ class RssWorker(QObject):
         return doc, error
 
     def run(self):
-        while True:
-            self.process()
+        while not self.terminating:
+            try:
+                self.process()
+            except Exception as e:
+                print('RSS EXCEPTION: ' + str(e))
+        self.finished.emit()
+
+    def finish(self):
+        self.terminating = True
 
     def process(self):
         torrents = 0
-        f = self.ds.rss()
+        f = self.ds.get_forum_to_scan()
+        print('RSS: ' + str(f))
         if 'id' not in f:
+            sleep(4)
             return
         doc, error = self.get_rss(f)
         if error is not None:
@@ -48,10 +60,12 @@ class RssWorker(QObject):
             if self.ds.save_torrent(torrent):
                 torrents += 1
         delta = f['delta']
+        print(f['title'] + ': ' + str(torrents))
+        self.processed.emit(f['id'], torrents)
         if torrents > 0:
-            self.rss_total += torrents
             delta = delta * 0.9
             self.ds.update_rss(f['id'], delta, datetime.now())
         else:
             delta = delta * 1.1
             self.ds.update_rss(f['id'], delta, datetime.now())
+        sleep(4)

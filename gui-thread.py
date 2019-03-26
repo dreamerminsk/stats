@@ -245,6 +245,11 @@ class Torrents2Widget(QWidget):
         self.listmodel.addItem(str(topic['published'])[:7])
 
 
+class RssRootCategoryItem:
+
+    def __init__(self):
+        pass
+
 class RssCategoryItem:
 
     def __init__(self, category, forums, topics):
@@ -285,9 +290,12 @@ class RssCategoryModel(QAbstractItemModel):
         pass
 
     def headerData(self, section, orientation, role=None):
-        if role == Qt.DisplayRole & orientation == Qt.Horizontal:
+        if role != Qt.DisplayRole:
+            return None
+        if orientation == Qt.Horizontal:
             return self.headers[section]
-        return None
+        else:
+            return None
 
     def index(self, row, column, parent=None, *args, **kwargs):
         if not parent.isValid():

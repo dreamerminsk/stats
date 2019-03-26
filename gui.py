@@ -5,8 +5,8 @@ from urllib.parse import urlparse, parse_qs
 import requests
 from PySide2.QtCore import QTimer, Signal, Slot, Qt, QModelIndex, QAbstractTableModel
 from PySide2.QtWidgets import QApplication, QMainWindow, QLabel, QTabWidget, QListWidget, QSplitter, QTableView
+from PySide2.QtWidgets import QStyleFactory
 from PySide2.QtWidgets import QWidget, QTableWidget, QTableWidgetItem, QVBoxLayout
-from PySide2.QtWidgets import QTreeWidget, QTreeWidgetItem
 from bs4 import BeautifulSoup
 
 import rutracker
@@ -345,7 +345,9 @@ class MyWindow(QMainWindow):
 
 
 if __name__ == "__main__":
+    print(QStyleFactory.keys())
     app = QApplication(sys.argv)
+    QApplication.setStyle(QStyleFactory.create('Fusion'))
     label = MyWindow()
     label.show()
     sys.exit(app.exec_())

@@ -5,6 +5,7 @@ from urllib.parse import urlparse, parse_qs
 
 import requests
 from PySide2.QtCore import QTimer, Signal, Slot, Qt, QModelIndex, QAbstractTableModel, QThread, QAbstractItemModel
+from PySide2.QtGui import QColor
 from PySide2.QtWidgets import QApplication, QMainWindow, QLabel, QTabWidget, QListWidget, QSplitter, QTableView, \
     QTreeView
 from PySide2.QtWidgets import QWidget, QTableWidget, QTableWidgetItem, QVBoxLayout
@@ -250,6 +251,7 @@ class RssRootCategoryItem:
 
     def __init__(self) -> object:
         self.categories = []
+        self.is_last_changed = False
 
     def addChild(self, child):
         self.categories.append(child)
@@ -262,7 +264,7 @@ class RssRootCategoryItem:
 
     def data(self, index):
         if index == 0:
-            return 'Categories'
+            return 'Категории'
         elif index == 1:
             forums = 0
             for item in self.categories:
@@ -290,6 +292,7 @@ class RssCategoryItem:
         self.category = category
         self.forums = forums
         self.topics = topics
+        self.is_last_changed = False
 
     def child(self, index):
         return None
@@ -323,10 +326,24 @@ class RssCategoryModel2(QAbstractItemModel):
     def data(self, index, role=None):
         if not index.isValid():
             return None
-        if not (role == Qt.DisplayRole):
-            return None
         item = index.internalPointer()
-        return item.data(index.column());
+        if role == Qt.DisplayRole:
+            return item.data(index.column())
+        elif role == Qt.ForegroundRole:
+            if item.is_last_changed:
+                return QColor(Qt.blue)
+            else:
+                return QColor(Qt.black)
+        elif role == Qt.FontRole:
+            font = QApplication.font()
+            if item.is_last_changed:
+                font.setBold(True)
+                return font
+            else:
+                font.setBold(False)
+                return font
+
+        return None
 
     def hasChildren(self, parent=None):
         if self.rowCount(parent) > 0:
@@ -390,6 +407,14 @@ class RssCategoryModel2(QAbstractItemModel):
         return False
 
     def addCategory(self, category, torrents):
+        if self.last_changed_items[0]:
+            self.last_changed_items[0].is_last_changed = False
+            parentTopLeft = self.index(0, 0, QModelIndex())
+            childTopLeft = self.index(self.last_changed_items[0].row(), 0, parentTopLeft)
+            childBottomRight = self.index(self.last_changed_items[0].row(), 0, parentTopLeft)
+            self.dataChanged.emit(childTopLeft, childBottomRight)
+        self.last_changed_items[0] = self.last_changed_items[1]
+        self.last_changed_items[1] = self.last_changed_items[2]
         cat = None
         for item in self.rssroot.categories:
             if item.category == category:
@@ -397,6 +422,8 @@ class RssCategoryModel2(QAbstractItemModel):
         if cat:
             cat.forums += 1
             cat.topics += torrents
+            cat.is_last_changed = True
+            self.last_changed_items[2] = cat
             parentTopLeft = self.index(0, 0, QModelIndex())
             parentBottomRight = self.index(0, 2, QModelIndex())
             childTopLeft = self.index(cat.row(), 0, parentTopLeft)
@@ -406,6 +433,8 @@ class RssCategoryModel2(QAbstractItemModel):
         else:
             self.beginInsertRows(QModelIndex(), self.rssroot.childCount(), self.rssroot.childCount())
             item = RssCategoryItem(self.rssroot, category, 1, torrents)
+            item.is_last_changed = True
+            self.last_changed_items[2] = item
             self.rssroot.addChild(item)
             self.endInsertRows()
 
@@ -413,6 +442,8 @@ class RssCategoryModel2(QAbstractItemModel):
         QAbstractItemModel.__init__(self)
         self.headers = ['Category', 'Forums', 'Topics']
         self.rssroot = RssRootCategoryItem()
+        self.last_changed = None
+        self.last_changed_items = [None, None, None]
 
 
 class RssCategoryModel(QAbstractItemModel):

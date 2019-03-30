@@ -319,6 +319,7 @@ class MyWindow(QMainWindow):
             q = urlparse(url.get('href')).query
             ps = parse_qs(q)
             torrent = (ps['t'][0], f['id'], entry.find('title').text,)
+            print('RSS: ' + str(torrent))
             # self.rsslist.addItem('\t' + torrent[2])
             if self.ds.save_torrent(torrent):
                 torrents += 1
@@ -345,7 +346,6 @@ class MyWindow(QMainWindow):
 
 
 if __name__ == "__main__":
-    print(QStyleFactory.keys())
     app = QApplication(sys.argv)
     QApplication.setStyle(QStyleFactory.create('Fusion'))
     label = MyWindow()

@@ -73,7 +73,7 @@ class RssWorker(QObject):
 
 
 class NewTorrentWorker(QObject):
-    processed = Signal(int, int)
+    processed = Signal(dict)
     finished = Signal()
 
     def __init__(self):
@@ -103,4 +103,5 @@ class NewTorrentWorker(QObject):
             return
         self.ds.insert_torrent(topic)
         self.torrents += 1
+        self.processed.emit(topic)
         sleep(8)

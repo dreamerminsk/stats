@@ -10,7 +10,7 @@ from PySide2.QtWidgets import QWidget, QTableWidget, QTableWidgetItem, QVBoxLayo
 from bs4 import BeautifulSoup
 
 import rutracker
-from model.models import RssCategoryModel
+from model.models import RssCategoryModel, NewTorrentModel
 from source import DataSource
 from workers import RssWorker, NewTorrentWorker
 
@@ -66,8 +66,8 @@ class TorrentsWidget(QWidget):
         QWidget.__init__(self)
         layout = QVBoxLayout(self)
         self.splitter = QSplitter(self)
-        self.list = QTableView(self)
-        self.listmodel = NewTorrentLM()
+        self.list = QTreeView(self)
+        self.listmodel = NewTorrentModel()
         self.list.setModel(self.listmodel)
         self.splitter.addWidget(self.list)
         self.t = QTableWidget(0, 4, self)
@@ -81,12 +81,15 @@ class TorrentsWidget(QWidget):
         self.worker.finished.connect(self.worker_thread.quit)
         self.worker.moveToThread(self.worker_thread)
         self.worker_thread.start()
-        # self.worker.processed.connect(self.processed)
+        self.worker.processed.connect(self.processed)
 
     def finish(self):
         self.worker.finish()
         self.worker_thread.quit()
         self.worker_thread.wait()
+
+    def processed(self, topic):
+        self.listmodel.add_topic(topic['published'])
 
 
 class Torrents2Widget(QWidget):

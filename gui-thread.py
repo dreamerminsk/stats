@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 import rutracker
 from model.models import RssCategoryModel
 from source import DataSource
-from workers import RssWorker
+from workers import RssWorker, NewTorrentWorker
 
 
 class NewTorrentLM(QAbstractTableModel):
@@ -74,6 +74,19 @@ class TorrentsWidget(QWidget):
         self.splitter.addWidget(self.t)
         layout.addWidget(self.splitter)
         self.setLayout(layout)
+        self.ds = DataSource()
+        self.worker = NewTorrentWorker()
+        self.worker_thread = QThread()
+        self.worker_thread.started.connect(self.worker.run)
+        self.worker.finished.connect(self.worker_thread.quit)
+        self.worker.moveToThread(self.worker_thread)
+        self.worker_thread.start()
+        # self.worker.processed.connect(self.processed)
+
+    def finish(self):
+        self.worker.finish()
+        self.worker_thread.quit()
+        self.worker_thread.wait()
 
 
 class Torrents2Widget(QWidget):
@@ -198,6 +211,7 @@ class MyWindow(QMainWindow):
 
     def closeEvent(self, event):
         self.rss.finish()
+        self.twidget.finish()
         event.accept()
 
 

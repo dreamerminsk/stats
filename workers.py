@@ -80,6 +80,7 @@ class NewTorrentWorker(QObject):
         QObject.__init__(self)
         self.ds = DataSource()
         self.terminating = False
+        self.torrents = 0
 
     def run(self):
         while not self.terminating:
@@ -102,4 +103,4 @@ class NewTorrentWorker(QObject):
             return
         self.ds.insert_torrent(topic)
         self.torrents += 1
-        self.newtorrents.emit(self.torrents)
+        sleep(8)

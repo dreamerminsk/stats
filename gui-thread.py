@@ -74,31 +74,6 @@ class TorrentsWidget(QWidget):
         self.splitter.addWidget(self.t)
         layout.addWidget(self.splitter)
         self.setLayout(layout)
-        self.ds = DataSource()
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.process)
-        self.timer.start(4368)
-        self.torrents = 0
-
-    def process(self):
-        t = self.ds.get_torrent()
-        print(t)
-        if 'id' not in t:
-            return
-        topic, error = rutracker.get_topic2(t['id'])
-        if error is not None:
-            print(error)
-            return
-        self.ds.insert_torrent(topic)
-        self.torrents += 1
-        self.newtorrents.emit(self.torrents)
-        row = self.t.rowCount()
-        self.t.setRowCount(row + 1)
-        self.t.setItem(row, 0, QTableWidgetItem(str(datetime.now())))
-        self.t.setItem(row, 1, QTableWidgetItem(str(topic['downloads'])))
-        self.t.setItem(row, 2, QTableWidgetItem(str(topic['title'])))
-        self.t.setItem(row, 3, QTableWidgetItem(str(topic['published'])))
-        self.listmodel.addItem(str(topic['published'])[:10])
 
 
 class Torrents2Widget(QWidget):

@@ -6,6 +6,7 @@ import requests
 from PySide2.QtCore import QObject, Signal
 from bs4 import BeautifulSoup
 
+import rutracker
 from source import DataSource
 
 
@@ -69,3 +70,36 @@ class RssWorker(QObject):
             delta = delta * 1.1
             self.ds.update_rss(f['id'], delta, datetime.now())
         sleep(4)
+
+
+class NewTorrentWorker(QObject):
+    processed = Signal(int, int)
+    finished = Signal()
+
+    def __init__(self):
+        QObject.__init__(self)
+        self.ds = DataSource()
+        self.terminating = False
+
+    def run(self):
+        while not self.terminating:
+            try:
+                self.process()
+            except Exception as e:
+                print('ADDING TORRENT EXCEPTION: ' + str(e))
+        self.finished.emit()
+
+    def finish(self):
+        self.terminating = True
+
+    def process(self):
+        t = self.ds.get_torrent()
+        if 'id' not in t:
+            return
+        topic, error = rutracker.get_topic2(t['id'])
+        if error is not None:
+            print(error)
+            return
+        self.ds.insert_torrent(topic)
+        self.torrents += 1
+        self.newtorrents.emit(self.torrents)

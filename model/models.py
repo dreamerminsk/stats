@@ -254,8 +254,7 @@ class PublishedNewTorrent(QObject):
         for year in self.years:
             if year.year == published.year:
                 return year.find(published)
-            else:
-                return None
+        return None
 
 
 class YearNewTorrent(QObject):
@@ -310,8 +309,7 @@ class YearNewTorrent(QObject):
         for m in self.months:
             if m.month == published.month:
                 return m.find(published)
-            else:
-                return None
+        return None
 
 
 class MonthNewTorrent(QObject):
@@ -365,8 +363,7 @@ class MonthNewTorrent(QObject):
         for d in self.days:
             if d.day == published.day:
                 return d
-            else:
-                return None
+        return None
 
 
 class DayNewTorrent(QObject):
@@ -474,7 +471,9 @@ class NewTorrentModel(QAbstractItemModel):
         return False
 
     def add_topic(self, published):
+        print('\t\t\tADD_TOPIC: ' + str(published))
         p = self.root.find(published)
+        print('\t\t\tADD_TOPIC: ' + str(p))
         if p:
             p.topics += 1
             self.dataChanged.emit(self.createIndex(p.row(), 0, p), self.createIndex(p.row(), 1, p))
@@ -482,8 +481,6 @@ class NewTorrentModel(QAbstractItemModel):
         else:
             queue = self.root.addChild(published)
             for item in queue:
-                print('\t\t\tTUPLE: ' + str(item))
-                print('\t\t\tTUPLE: ' + str(item[0]))
                 self.beginInsertRows(self.createIndex(item[0].row(), 0, item[0]), item[0].childCount(),
                                      item[0].childCount())
                 item[0].append(item[1])

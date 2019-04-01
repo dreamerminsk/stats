@@ -1,6 +1,6 @@
-from datetime import datetime
+﻿from datetime import datetime
 
-from PySide2.QtCore import QAbstractItemModel, Qt, QModelIndex
+from PySide2.QtCore import QAbstractItemModel, Qt, QModelIndex, QObject
 from PySide2.QtGui import QColor
 from PySide2.QtWidgets import QApplication
 
@@ -204,19 +204,24 @@ class RssCategoryModel(QAbstractItemModel):
         self.last_changed_items = [None, None, None]
 
 
-class PublishedNewTorrent:
+class PublishedNewTorrent(QObject):
 
     def __init__(self) -> object:
         self.years = []
 
-    def addChild(self, child):
+    def append(self, child):
+        self.years.append(child)
+
+    def addChild(self, child) -> object:
+        queue = []
         for y in self.years:
             if y.year == child.year:
-                y.addChild(child)
-            else:
-                new_node = YearNewTorrent(self, child.year)
-                new_node.addChild(child)
-                self.years.append(new_node)
+                queue.extend(y.addChild(child))
+                return queue
+        new_node = YearNewTorrent(self, child.year)
+        queue.append((self, new_node))
+        queue.extend(new_node.addChild(child))
+        return queue
 
     def child(self, index):
         return self.years[index]
@@ -228,7 +233,7 @@ class PublishedNewTorrent:
         if index == 0:
             return 'Published'
         elif index == 1:
-            self.topics
+            return self.topics
         else:
             return None
 
@@ -253,21 +258,26 @@ class PublishedNewTorrent:
                 return None
 
 
-class YearNewTorrent:
+class YearNewTorrent(QObject):
 
     def __init__(self, parent, year) -> object:
         self.parent_item = parent
         self.year = year
         self.months = []
 
+    def append(self, child: object):
+        self.months.append(child)
+
     def addChild(self, child):
+        queue = []
         for m in self.months:
-            if m.year == child.month:
-                m.addChild(child)
-            else:
-                new_node = MonthNewTorrent(self, child.year, child.month)
-                new_node.addChild(child)
-                self.months.append(new_node)
+            if m.month == child.month:
+                queue.extend(m.addChild(child))
+                return queue
+        new_node = MonthNewTorrent(self, child.year, child.month)
+        queue.append((self, new_node))
+        queue.extend(new_node.addChild(child))
+        return queue
 
     def child(self, index):
         return self.months[index]
@@ -279,7 +289,7 @@ class YearNewTorrent:
         if index == 0:
             return str(self.year)
         elif index == 1:
-            self.topics
+            return self.topics
         else:
             return None
 
@@ -304,7 +314,7 @@ class YearNewTorrent:
                 return None
 
 
-class MonthNewTorrent:
+class MonthNewTorrent(QObject):
 
     def __init__(self, parent, year, month) -> object:
         self.parent_item = parent
@@ -312,13 +322,17 @@ class MonthNewTorrent:
         self.month = month
         self.days = []
 
+    def append(self, child):
+        self.days.append(child)
+
     def addChild(self, child):
+        queue = []
         for d in self.days:
             if d.day == child.day:
-                d.topics += 1
-            else:
-                new_node = DayNewTorrent(self, child.year, child.month, child.day)
-                self.days.append(new_node)
+                return queue
+        new_node = DayNewTorrent(self, child.year, child.month, child.day)
+        queue.append((self, new_node))
+        return queue
 
     def child(self, index):
         return self.days[index]
@@ -330,7 +344,7 @@ class MonthNewTorrent:
         if index == 0:
             return str(self.year) + '-' + '{:02}'.format(self.month)
         elif index == 1:
-            self.topics
+            return self.topics
         else:
             return None
 
@@ -338,7 +352,7 @@ class MonthNewTorrent:
         return self.parent_item
 
     def row(self):
-        return self.parent_item.years.index(self)
+        return self.parent_item.months.index(self)
 
     @property
     def topics(self):
@@ -355,7 +369,7 @@ class MonthNewTorrent:
                 return None
 
 
-class DayNewTorrent:
+class DayNewTorrent(QObject):
 
     def __init__(self, parent, year, month, day) -> object:
         self.parent_item = parent
@@ -382,7 +396,7 @@ class DayNewTorrent:
         return self.parent_item
 
     def row(self):
-        return self.parent_item.years.index(self)
+        return self.parent_item.days.index(self)
 
 
 class NewTorrentModel(QAbstractItemModel):
@@ -463,16 +477,23 @@ class NewTorrentModel(QAbstractItemModel):
         p = self.root.find(published)
         if p:
             p.topics += 1
-            parentTopLeft = self.index(0, 0, QModelIndex())
-            parentBottomRight = self.index(0, 1, QModelIndex())
-            childTopLeft = self.index(p.row(), 0, parentTopLeft)
-            childBottomRight = self.index(p.row(), 0, parentTopLeft)
-            self.dataChanged.emit(parentTopLeft, parentBottomRight)
-            self.dataChanged.emit(childTopLeft, childBottomRight)
+            self.dataChanged.emit(self.createIndex(p.row(), 0, p), self.createIndex(p.row(), 1, p))
+            self.update_path(p)
         else:
-            self.beginInsertRows(QModelIndex(), self.root.childCount(), self.root.childCount())
-            self.root.addChild(published)
-            self.endInsertRows()
+            queue = self.root.addChild(published)
+            for item in queue:
+                print('\t\t\tTUPLE: ' + str(item))
+                print('\t\t\tTUPLE: ' + str(item[0]))
+                self.beginInsertRows(self.createIndex(item[0].row(), 0, item[0]), item[0].childCount(),
+                                     item[0].childCount())
+                item[0].append(item[1])
+                self.endInsertRows()
+
+    def update_path(self, p):
+        cur = p
+        while cur.parent() != None:
+            self.dataChanged.emit(self.createIndex(cur.row(), 0, cur), self.createIndex(cur.row(), 1, cur))
+            cur = cur.parent()
 
     def __init__(self):
         QAbstractItemModel.__init__(self)

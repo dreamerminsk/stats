@@ -1,18 +1,15 @@
 ﻿import sys
-from datetime import datetime
 
 import requests
-from PySide2.QtCore import QTimer, Signal, Slot, Qt, QModelIndex, QAbstractTableModel, QThread
-from PySide2.QtWidgets import QApplication, QMainWindow, QLabel, QTabWidget, QListWidget, QSplitter, QTableView, \
-    QTreeView
+from PySide2.QtCore import Signal, Slot, Qt, QModelIndex, QAbstractTableModel, QThread
+from PySide2.QtWidgets import QApplication, QMainWindow, QLabel, QTabWidget, QListWidget, QSplitter, QTreeView
 from PySide2.QtWidgets import QStyleFactory
-from PySide2.QtWidgets import QWidget, QTableWidget, QTableWidgetItem, QVBoxLayout
+from PySide2.QtWidgets import QWidget, QTableWidget, QVBoxLayout
 from bs4 import BeautifulSoup
 
-import rutracker
 from model.models import RssCategoryModel, NewTorrentModel
 from source import DataSource
-from workers import RssWorker, NewTorrentWorker
+from workers import RssWorker, NewTorrentWorker, UpdateTorrentWorker
 
 
 class NewTorrentLM(QAbstractTableModel):
@@ -99,8 +96,8 @@ class Torrents2Widget(QWidget):
         QWidget.__init__(self)
         layout = QVBoxLayout(self)
         self.splitter = QSplitter(self)
-        self.list = QTableView(self)
-        self.listmodel = NewTorrentLM()
+        self.list = QTreeView(self)
+        self.listmodel = NewTorrentModel()
         self.list.setModel(self.listmodel)
         self.splitter.addWidget(self.list)
         self.t = QTableWidget(0, 4, self)
@@ -108,31 +105,21 @@ class Torrents2Widget(QWidget):
         layout.addWidget(self.splitter)
         self.setLayout(layout)
         self.ds = DataSource()
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.process)
-        self.timer.start(3768)
-        self.torrents = 0
+        self.worker = UpdateTorrentWorker()
+        self.worker_thread = QThread()
+        self.worker_thread.started.connect(self.worker.run)
+        self.worker.finished.connect(self.worker_thread.quit)
+        self.worker.moveToThread(self.worker_thread)
+        self.worker_thread.start()
+        self.worker.processed.connect(self.processed)
 
-    def process(self):
-        t = self.ds.get_check_torrent()
-        print(t)
-        if 'id' not in t:
-            return
-        topic, error = rutracker.get_topic2(t['id'])
-        if error is not None:
-            print(error)
-            return
-        self.ds.insert_torrent(topic)
-        self.torrents += 1
-        self.newtorrents.emit(self.torrents)
-        row = self.t.rowCount()
-        self.t.setRowCount(row + 1)
-        self.t.setItem(row, 0, QTableWidgetItem(str(datetime.now())))
-        self.t.setItem(row, 1, QTableWidgetItem(str(topic['downloads'])))
-        self.t.setItem(row, 2, QTableWidgetItem(str(topic['title'])))
-        self.t.setItem(row, 3, QTableWidgetItem(str(topic['published'])))
-        self.listmodel.addItem(str(topic['published'])[:7])
+    def finish(self):
+        self.worker.finish()
+        self.worker_thread.quit()
+        self.worker_thread.wait()
 
+    def processed(self, topic):
+        self.listmodel.add_topic(topic['published'])
 
 class RssWidget(QWidget):
     newtorrents = Signal(int)
@@ -215,6 +202,7 @@ class MyWindow(QMainWindow):
     def closeEvent(self, event):
         self.rss.finish()
         self.twidget.finish()
+        self.t2widget.finish()
         event.accept()
 
 

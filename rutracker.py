@@ -1,4 +1,4 @@
-import pickle
+﻿import pickle
 from datetime import datetime
 from urllib.parse import urlparse, parse_qs
 
@@ -152,6 +152,10 @@ class TopicParser:
         hi = doc.select_one('#tor-tor_hash')
         if hi:
             tor_hash = hi.text.strip()
+        else:
+            hi = doc.select_one('#tor-hash')
+            if hi:
+                tor_hash = hi.text.strip()
         return tor_hash
 
     @staticmethod

@@ -64,6 +64,7 @@ class TorrentsWidget(QWidget):
         layout = QVBoxLayout(self)
         self.splitter = QSplitter(self)
         self.list = QTreeView(self)
+        self.list.setSortingEnabled(True)
         self.listmodel = NewTorrentModel()
         self.list.setModel(self.listmodel)
         self.splitter.addWidget(self.list)

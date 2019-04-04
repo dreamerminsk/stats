@@ -136,6 +136,14 @@ class UpdateTorrentWorker(QObject):
         if error is not None:
             print(error)
             return
+        if not topic['title']:
+            topic['title'] = t['title']
+        if t['seed'] > topic['seed']:
+            topic['seed'] = t['seed']
+        if t['leech'] > topic['leech']:
+            topic['leech'] = t['leech']
+        if t['downloads'] > topic['downloads']:
+            topic['downloads'] = t['downloads']
         self.ds.insert_torrent(topic)
         self.torrents += 1
         self.processed.emit(topic)

@@ -434,7 +434,7 @@ class NewTorrentModel(QAbstractItemModel):
             if childItem:
                 return self.createIndex(row, column, childItem)
             else:
-                return QModelIndex();
+                return QModelIndex()
         return QModelIndex()
 
     def insertRow(self, row, parent=None, *args, **kwargs):
@@ -453,7 +453,7 @@ class NewTorrentModel(QAbstractItemModel):
         parentItem = childItem.parent()
         if (parentItem == None):
             return QModelIndex()
-        return self.createIndex(parentItem.row(), 0, parentItem);
+        return self.createIndex(parentItem.row(), 0, parentItem)
 
     def rowCount(self, parent=None, *args, **kwargs):
         if parent.column() > 0:
@@ -462,7 +462,7 @@ class NewTorrentModel(QAbstractItemModel):
             return 1
         else:
             parentItem = parent.internalPointer()
-        return parentItem.childCount();
+        return parentItem.childCount()
 
     def setData(self, index, value, role=None):
         return False

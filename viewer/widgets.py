@@ -1,4 +1,7 @@
-from PySide2.QtWidgets import QWidgets
+from PySide2.QtWidgets import QWidget, QVBoxLayout, QSplitter, QTreeView
+
+from source import DataSource
+
 
 class LeftMenuWidget(QWidget):
 
@@ -8,8 +11,8 @@ class LeftMenuWidget(QWidget):
         self.splitter = QSplitter(self)
         self.tree = QTreeView(self)
         self.tree.setSortingEnabled(True)
-        #self.treemodel = NewTorrentModel()
-        #self.list.setModel(self.listmodel)
+        # self.treemodel = NewTorrentModel()
+        # self.list.setModel(self.listmodel)
         self.splitter.addWidget(self.tree)
         layout.addWidget(self.splitter)
         self.setLayout(layout)

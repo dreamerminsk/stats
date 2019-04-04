@@ -1,5 +1,5 @@
 import sqlite3
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 from PySide2.QtCore import QThread
 from PySide2.QtSql import QSqlDatabase, QSqlQuery
@@ -93,6 +93,22 @@ class DataSource:
             return forum
         except Exception as ex:
             print(str(ex))
+        finally:
+            db.close()
+
+    def get_categories(self):
+        db = self.get_db()
+        try:
+            if not db.isOpen():
+                db.open()
+            query = QSqlQuery(db=db)
+            query.prepare("select * from categories;")
+            query.exec_()
+            categories: List[Dict[str, None]] = []
+            while query.next():
+                category = {'id': query.value('id'), 'title': query.value('title')}
+                categories.append(category)
+            return categories
         finally:
             db.close()
 

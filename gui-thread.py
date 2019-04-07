@@ -13,48 +13,6 @@ from source import DataSource
 from workers import RssWorker, NewTorrentWorker, UpdateTorrentWorker
 
 
-class NewTorrentLM(QAbstractTableModel):
-
-    def __init__(self):
-        QAbstractTableModel.__init__(self)
-        self.days = list()
-        self.stats = dict()
-
-    def columnCount(self, parent=None):
-        return 2
-
-    def data(self, index, role=None):
-        if role == Qt.DisplayRole:
-            if index.column() == 0:
-                return self.days[index.row()]
-            elif index.column() == 1:
-                return str(self.stats[self.days[index.row()]])
-            else:
-                return None
-        else:
-            return None
-
-    def headerData(self, section, orientation, role=None):
-        pass
-
-    def insertRow(self, row, parent=None, *args, **kwargs):
-        pass
-
-    def rowCount(self, parent=QModelIndex(), *args, **kwargs):
-        return len(self.days)
-
-    def addItem(self, item):
-        if self.days.count(str(item)) == 0:
-            self.beginInsertRows(QModelIndex(), len(self.days), len(self.days))
-            self.days.append(str(item))
-            self.stats[str(item)] = 1
-            self.days.sort()
-            self.endInsertRows()
-        else:
-            self.beginResetModel()
-            self.stats[str(item)] += 1
-            self.endResetModel()
-
 
 class TorrentsWidget(QWidget):
     list: QListWidget

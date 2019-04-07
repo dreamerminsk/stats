@@ -207,6 +207,7 @@ class RssCategoryModel(QAbstractItemModel):
 class PublishedNewTorrent(QObject):
 
     def __init__(self) -> object:
+        self.none = NoneNewTorrent(self)
         self.years = []
 
     def append(self, child):
@@ -214,6 +215,8 @@ class PublishedNewTorrent(QObject):
 
     def addChild(self, child) -> object:
         queue = []
+        if child == None:
+            return queue
         for y in self.years:
             if y.year == child.year:
                 queue.extend(y.addChild(child))
@@ -224,10 +227,12 @@ class PublishedNewTorrent(QObject):
         return queue
 
     def child(self, index):
-        return self.years[index]
+        if index == 0:
+            return self.none
+        return self.years[index-1]
 
     def childCount(self):
-        return len(self.years)
+        return len(self.years)+1
 
     def data(self, index):
         if index == 0:
@@ -245,12 +250,14 @@ class PublishedNewTorrent(QObject):
 
     @property
     def topics(self):
-        topics = 0
+        topics = self.none.topics
         for item in self.years:
             topics += item.topics
         return topics
 
     def find(self, published: datetime):
+        if published == None:
+            return self.none
         for year in self.years:
             if year.year == published.year:
                 return year.find(published)
@@ -296,7 +303,7 @@ class YearNewTorrent(QObject):
         return self.parent_item
 
     def row(self):
-        return self.parent_item.years.index(self)
+        return self.parent_item.years.index(self)+1
 
     @property
     def topics(self):
@@ -395,6 +402,32 @@ class DayNewTorrent(QObject):
     def row(self):
         return self.parent_item.days.index(self)
 
+		
+class NoneNewTorrent(QObject):
+
+    def __init__(self, parent) -> object:
+        self.parent_item = parent
+        self.topics = 0
+
+    def child(self, index):
+        return None
+
+    def childCount(self):
+        return 0
+
+    def data(self, index):
+        if index == 0:
+            return 'None'
+        elif index == 1:
+            return self.topics
+        else:
+            return None
+
+    def parent(self):
+        return self.parent_item
+
+    def row(self):
+        return 0
 
 class NewTorrentModel(QAbstractItemModel):
 
@@ -470,7 +503,7 @@ class NewTorrentModel(QAbstractItemModel):
     def setItemData(self, index, roles):
         return False
 
-    def add_topic(self, published):
+    def add_topic(self,	published):
         print('\t\t\tADD_TOPIC: ' + str(published))
         p = self.root.find(published)
         print('\t\t\tADD_TOPIC: ' + str(p))

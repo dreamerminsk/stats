@@ -113,6 +113,10 @@ class DataSource:
             db.close()
 
     def get_category(self, id):
+        category: Dict[str, Optional[Any]] = {}
+        if id is None:
+            category['id'] = id
+            category['title'] = '<UNKNOWN>'
         db = self.get_db()
         try:
             if not db.isOpen():
@@ -121,7 +125,6 @@ class DataSource:
             query.prepare("select * from categories where id=:id;")
             query.bindValue(':id', id)
             query.exec_()
-            category: Dict[str, Optional[Any]] = {}
             while query.next():
                 category['id'] = query.value('id')
                 category['title'] = query.value('title')

@@ -1,7 +1,7 @@
 ﻿import sys
 
 import requests
-from PySide2.QtCore import Signal, Slot, Qt, QModelIndex, QAbstractTableModel, QThread
+from PySide2.QtCore import Signal, Slot, Qt, QModelIndex, QAbstractTableModel, QThread, QSettings, QSize, QPoint
 from PySide2.QtWidgets import QApplication, QMainWindow, QLabel, QTabWidget, QListWidget, QSplitter, QTreeView
 from PySide2.QtWidgets import QStyleFactory
 from PySide2.QtWidgets import QWidget, QTableWidget, QVBoxLayout
@@ -146,6 +146,7 @@ class RssWidget(QWidget):
         self.worker_thread.start()
         self.worker.processed.connect(self.processed)
 
+
     @Slot(int, int)
     def processed(self, forum_id, torrents):
         forum = self.ds.get_forum(forum_id)
@@ -162,21 +163,29 @@ class MyWindow(QMainWindow):
 
     def __init__(self):
         QMainWindow.__init__(self)
+        settings = QSettings('dreamix Studio', 'rt-stats')
         self.setWindowTitle("RuTracker.org")
         self.setGeometry(200, 200, 640, 480)
         self.tabwidget = QTabWidget()
         self.rsslbl = QLabel("RSS")
         self.rsslist = QListWidget(self)
         self.rss = RssWidget()
+        self.rss.splitter.restoreState(settings.value('main/rss/splitter'))
         self.tabwidget.addTab(self.rss, "rss")
         self.twidget = TorrentsWidget()
+        self.twidget.splitter.restoreState(settings.value('main/new/splitter'))
+        self.twidget.list.header().restoreState(settings.value('main/new/tree'))
         self.twidget.newtorrents.connect(self.update_tab_1)
         self.tabwidget.addTab(self.twidget, "new torrents")
         self.t2widget = Torrents2Widget()
+        self.t2widget.splitter.restoreState(settings.value('main/update/splitter'))
         self.t2widget.newtorrents.connect(self.update_tab_2)
         self.tabwidget.addTab(self.t2widget, "check torrents")
         self.setCentralWidget(self.tabwidget)
         self.ds = DataSource()
+
+        self.resize(settings.value('main/size', QSize(640, 480)))
+        self.move(settings.value('main/pos', QPoint(200, 200)))
 
     @Slot(int)
     def update_tab_1(self, torrents):
@@ -204,6 +213,13 @@ class MyWindow(QMainWindow):
         self.rss.finish()
         self.twidget.finish()
         self.t2widget.finish()
+        settings = QSettings('dreamix Studio', 'rt-stats')
+        settings.setValue('main/size', self.size())
+        settings.setValue('main/pos', self.pos())
+        settings.setValue('main/rss/splitter', self.rss.splitter.saveState())
+        settings.setValue('main/new/splitter', self.twidget.splitter.saveState())
+        settings.setValue('main/new/tree', self.twidget.list.header().saveState())
+        settings.setValue('main/update/splitter', self.t2widget.splitter.saveState())
         event.accept()
 
 

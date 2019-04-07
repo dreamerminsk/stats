@@ -185,7 +185,7 @@ class RssCategoryModel(QAbstractItemModel):
             parentTopLeft = self.index(0, 0, QModelIndex())
             parentBottomRight = self.index(0, 2, QModelIndex())
             childTopLeft = self.index(cat.row(), 0, parentTopLeft)
-            childBottomRight = self.index(cat.row(), 0, parentTopLeft)
+            childBottomRight = self.index(cat.row(), 0, parentBottomRight)
             self.dataChanged.emit(parentTopLeft, parentBottomRight)
             self.dataChanged.emit(childTopLeft, childBottomRight)
         else:

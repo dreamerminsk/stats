@@ -1,7 +1,8 @@
 ﻿import sys
 
 import requests
-from PySide2.QtCore import Signal, Slot, Qt, QModelIndex, QAbstractTableModel, QThread, QSettings, QSize, QPoint
+from PySide2.QtCore import Signal, Slot, Qt, QModelIndex, QAbstractTableModel, QThread, QSettings, QSize, QPoint, \
+    QSortFilterProxyModel
 from PySide2.QtWidgets import QApplication, QMainWindow, QLabel, QTabWidget, QListWidget, QSplitter, QTreeView
 from PySide2.QtWidgets import QStyleFactory
 from PySide2.QtWidgets import QWidget, QTableWidget, QVBoxLayout
@@ -65,8 +66,10 @@ class TorrentsWidget(QWidget):
         self.splitter = QSplitter(self)
         self.list = QTreeView(self)
         self.list.setSortingEnabled(True)
-        self.listmodel = NewTorrentModel()
-        self.list.setModel(self.listmodel)
+        self.model = NewTorrentModel()
+        proxy = QSortFilterProxyModel()
+        proxy.setSourceModel(self.model)
+        self.list.setModel(proxy)
         self.splitter.addWidget(self.list)
         self.t = QTableWidget(0, 4, self)
         self.splitter.addWidget(self.t)
@@ -87,7 +90,7 @@ class TorrentsWidget(QWidget):
         self.worker_thread.wait()
 
     def processed(self, topic):
-        self.listmodel.add_topic(topic['published'])
+        self.model.add_topic(topic['published'])
 
 
 class Torrents2Widget(QWidget):
@@ -98,8 +101,11 @@ class Torrents2Widget(QWidget):
         layout = QVBoxLayout(self)
         self.splitter = QSplitter(self)
         self.list = QTreeView(self)
-        self.listmodel = NewTorrentModel()
-        self.list.setModel(self.listmodel)
+        self.list.setSortingEnabled(True)
+        self.model = NewTorrentModel()
+        proxy = QSortFilterProxyModel()
+        proxy.setSourceModel(self.model)
+        self.list.setModel(proxy)
         self.splitter.addWidget(self.list)
         self.t = QTableWidget(0, 4, self)
         self.splitter.addWidget(self.t)
@@ -120,7 +126,7 @@ class Torrents2Widget(QWidget):
         self.worker_thread.wait()
 
     def processed(self, topic):
-        self.listmodel.add_topic(topic['published'])
+        self.model.add_topic(topic['published'])
 
 class RssWidget(QWidget):
     newtorrents = Signal(int)
@@ -129,10 +135,13 @@ class RssWidget(QWidget):
         QWidget.__init__(self)
         layout = QVBoxLayout(self)
         self.splitter = QSplitter(self)
-        self.cat_table = QTreeView(self)
+        self.cats = QTreeView(self)
+        self.cats.setSortingEnabled(True)
         self.cat_model = RssCategoryModel()
-        self.cat_table.setModel(self.cat_model)
-        self.splitter.addWidget(self.cat_table)
+        proxy = QSortFilterProxyModel()
+        proxy.setSourceModel(self.cat_model)
+        self.cats.setModel(proxy)
+        self.splitter.addWidget(self.cats)
         self.t = QTableWidget(0, 4, self)
         self.splitter.addWidget(self.t)
         layout.addWidget(self.splitter)
@@ -149,8 +158,11 @@ class RssWidget(QWidget):
 
     @Slot(int, int)
     def processed(self, forum_id, torrents):
+        print('\t\t\tRSS: ' + str(forum_id) + ', ' + str(torrents))
         forum = self.ds.get_forum(forum_id)
+        print('\t\t\tRSS FORUM: ' + str(forum))
         cat = self.ds.get_category(forum['category'])
+        print('\t\t\tRSS CAT: ' + str(cat))
         self.cat_model.addCategory(cat['title'], torrents)
 
     def finish(self):

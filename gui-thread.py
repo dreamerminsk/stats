@@ -157,28 +157,6 @@ class MyWindow(QMainWindow):
         self.resize(settings.value('main/size', QSize(640, 480)))
         self.move(settings.value('main/pos', QPoint(200, 200)))
 
-    @Slot(int)
-    def update_tab_1(self, torrents):
-        self.tabwidget.setTabText(1, 'new torrents /' + str(torrents) + '/')
-
-    @Slot(int)
-    def update_tab_2(self, torrents):
-        self.tabwidget.setTabText(2, 'check torrents /' + str(torrents) + '/')
-
-    @staticmethod
-    def get_page(ref):
-        try:
-            r = requests.get(ref, timeout=24)
-            doc = BeautifulSoup(r.text, 'html.parser')
-            return doc, None
-        except Exception as ex:
-            return None, ex
-
-    def get_rss(self, forum):
-        ref = 'http://feed.rutracker.cc/atom/f/' + str(forum['id']) + '.atom'
-        (doc, error) = self.get_page(ref)
-        return doc, error
-
     def closeEvent(self, event):
         self.rss.finish()
         self.twidget.finish()

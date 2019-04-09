@@ -52,9 +52,7 @@ def login():
                 else:
                     ds[v.get('name')] = cap
         res2 = s.post('https://rutracker.org/forum/login.php', data=ds)
-        print(res2.text)
     save_cookies(s.cookies)
-    print(load_cookies())
 
 
 def get_page(ref):

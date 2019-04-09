@@ -12,6 +12,7 @@ from source import DataSource
 
 class RssWorker(QObject):
     processed = Signal(int, int)
+    error = Signal(Exception)
     finished = Signal()
 
     def __init__(self):

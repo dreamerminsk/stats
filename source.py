@@ -155,8 +155,9 @@ class DataSource:
         try:
             if not db.isOpen():
                 db.open()
-            query = QSqlQuery(query="select * from torrents where (hash is null) or (last_checked is null) order by id desc limit 1;",
-                              db=db)
+            query = QSqlQuery(
+                query="select * from torrents where (hash is null) and (last_checked is null) order by id desc limit 1;",
+                db=db)
             topic = {}
             while query.next():
                 topic['id'] = query.value('id')

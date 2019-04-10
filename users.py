@@ -2,7 +2,9 @@ import time
 
 import rutracker
 import source
-from src import api
+
+
+# from src import api
 
 
 def get_title(doc):
@@ -43,7 +45,7 @@ def parse_user(doc):
 
 
 c = source._db.execute('select distinct user_id from torrents as t left join users as u on t.user_id=u.id where u.id '
-                       'is null limit 320;')
+                       'is null limit 1024;')
 us = []
 for user in c:
     if user['user_id'] is None:
@@ -63,9 +65,9 @@ for user in c:
     if len(us) == 32:
         b = {}
         b['data'] = us
-        r = api.users.create(body=b)
-        print(r.status_code)
-        print(r.body)
+        # r = api.users.create(body=b)
+        # print(r.status_code)
+        #print(r.body)
         for usr in us:
             source.insert_user(usr)
         us = []
@@ -78,8 +80,8 @@ for user in c:
 if len(us) > 0:
     b = {}
     b['data'] = us
-    r = api.users.create(body=b)
-    print(r.status_code)
-    print(r.body)
+    # r = api.users.create(body=b)
+    # print(r.status_code)
+    #print(r.body)
     for usr in us:
         source.insert_user(usr)

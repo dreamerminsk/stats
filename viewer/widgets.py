@@ -5,17 +5,17 @@ from source import DataSource
 
 
 class CategoryItem(QObject):
+
     def __init__(self, parent, cat) -> object:
         self.parent_item = parent
         self.cat = cat
+        self.forums = []
 
     def child(self, index):
-        # return self.months[index]
-        return None
+        return self.forums[index]
 
     def childCount(self):
-        return 0
-        # return len(self.months)
+        return len(self.forums)
 
     def data(self, index):
         if index == 0:
@@ -29,9 +29,36 @@ class CategoryItem(QObject):
     def row(self):
         return self.parent_item.find(self)
 
+    def find(self, item):
+        return self.forums.index(item)
+
 
 class ForumItem(QObject):
-    pass
+    def __init__(self, parent, forum) -> object:
+        self.parent_item = parent
+        self.forum = forum
+        self.forums = []
+
+    def child(self, index):
+        return self.forums[index]
+
+    def childCount(self):
+        return len(self.forums)
+
+    def data(self, index):
+        if index == 0:
+            return self.forum['title']
+        else:
+            return None
+
+    def parent(self):
+        return self.parent_item
+
+    def row(self):
+        return self.parent_item.find(self)
+
+    def find(self, item):
+        return self.forums.index(item)
 
 
 class ForumModel(QAbstractItemModel):
@@ -69,7 +96,7 @@ class ForumModel(QAbstractItemModel):
                 return QModelIndex()
         return QModelIndex()
 
-    def itemData(self, index):  # real signature unknown; restored from __doc__
+    def itemData(self, index):
         return {}
 
     def parent(self, child):
@@ -81,7 +108,7 @@ class ForumModel(QAbstractItemModel):
             return QModelIndex()
         return self.createIndex(parentItem.row(), 0, parentItem)
 
-    def rowCount(self, parent=None, *args, **kwargs):  # real signature unknown; NOTE: unreliably restored from __doc__
+    def rowCount(self, parent=None, *args, **kwargs):
         if parent.column() > 0:
             return 0
         if not parent.isValid():

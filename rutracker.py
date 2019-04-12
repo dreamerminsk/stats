@@ -62,6 +62,27 @@ def get_page(ref):
         return (doc, None)
     except Exception as ex:
         return (None, ex)
+    
+    
+class WebClient():
+    def get_page(ref):
+        try:
+            r = s.get(ref, timeout=24)
+            doc = BeautifulSoup(r.text, 'html.parser')
+            return (doc, None)
+        except Exception as ex:
+            return (None, ex)    
+    
+    
+    def load_cookies():
+        with open('cookie.dat', 'rb') as f:
+            cookies = pickle.load(f)
+        return cookies
+
+
+    def save_cookies(cookies):
+        with open('cookie.dat', 'wb') as f:
+            pickle.dump(cookies, f)
 
 
 def get_forum(id):

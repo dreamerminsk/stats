@@ -71,7 +71,7 @@ class DataSource:
 
     @staticmethod
     def get_db():
-        name = "db-" + str(QThread.currentThread())
+        name = "db-{0}".format(str(QThread.currentThread()))
         if QSqlDatabase.contains(name):
             return QSqlDatabase.database(name)
         else:
@@ -79,7 +79,7 @@ class DataSource:
             db.setDatabaseName("video.db")
             return db
 
-    def get_forum_to_scan(self):
+    def get_forum_to_scan(self) -> object:
         db = self.get_db()
         try:
             if not db.isOpen():
@@ -258,6 +258,25 @@ class DataSource:
         finally:
             db.close()
 
+    def get_new_user(self):
+        db = self.get_db()
+        try:
+            if not db.isOpen():
+                db.open()
+            query = QSqlQuery(
+                query='select distinct user_id from torrents as t left join users as u on t.user_id=u.id where u.id is null and user_id > 0 limit 1;',
+                db=db)
+            user = {}
+            while query.next():
+                user['id'] = query.value('user_id')
+                # user['name'] = query.value('name')
+                # user['registered'] = query.value('registered')
+                # user['nation'] = query.value('nation')
+            return user
+        finally:
+            db.close()
+
+
     def insert_user(self, user):
         db = self.get_db()
         try:
@@ -265,10 +284,10 @@ class DataSource:
                 db.open()
             query = QSqlQuery(db=db)
             query.prepare('insert into users(id, name, registered, nation) values(:id, :name, :reg, :nation)')
-            query.bindValue(':id', torrent[0])
-            query.bindValue(':name', torrent[1])
-            query.bindValue(':reg', torrent[2])
-            query.bindValue(':nation', torrent[3])
+            query.bindValue(':id', user['id'])
+            query.bindValue(':name', user['name'])
+            query.bindValue(':reg', user['registered'])
+            query.bindValue(':nation', user['nation'])
             return query.exec_()
         except Exception as ex:
             return False

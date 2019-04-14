@@ -153,10 +153,10 @@ class UserParser:
     @staticmethod
     def parse(doc):
         u = {}
-        u['name'] = get_title(doc)
-        u['registered'] = get_registered(doc)
-        u['nation'] = get_nation(doc)
-    return u
+        u['name'] = UserParser.get_title(doc)
+        u['registered'] = UserParser.get_registered(doc)
+        u['nation'] = UserParser.get_nation(doc)
+        return u
 
 
 class TopicParser:

@@ -172,5 +172,13 @@ class UpdateUserWorker(QObject):
         self.terminating = True
 
     def process(self):
-        self.processed.emit(topic)
+        u = self.ds.get_new_user()
+        if 'id' not in u:
+            return
+        user, error = rutracker.get_user2(u['id'])
+        if error is not None:
+            print(error)
+            return
+        self.ds.insert_user(user)
+        self.processed.emit(user)
         sleep(8)

@@ -1,17 +1,14 @@
 ﻿import sys
 
-import requests
-from PySide2.QtCore import Signal, Slot, Qt, QModelIndex, QAbstractTableModel, QThread, QSettings, QSize, QPoint, \
+from PySide2.QtCore import Signal, Slot, QThread, QSettings, QSize, QPoint, \
     QSortFilterProxyModel
 from PySide2.QtWidgets import QApplication, QMainWindow, QLabel, QTabWidget, QListWidget, QSplitter, QTreeView
 from PySide2.QtWidgets import QStyleFactory
 from PySide2.QtWidgets import QWidget, QTableWidget, QVBoxLayout
-from bs4 import BeautifulSoup
 
 from model.models import RssCategoryModel, NewTorrentModel
 from source import DataSource
-from workers import RssWorker, NewTorrentWorker, UpdateTorrentWorker
-
+from workers import RssWorker, NewTorrentWorker, UpdateTorrentWorker, UpdateUserWorker
 
 
 class TorrentsWidget(QWidget):
@@ -129,6 +126,31 @@ class RssWidget(QWidget):
         self.worker_thread.wait()
 
 
+class UserWidget(QWidget):
+    def __init__(self):
+        QWidget.__init__(self)
+        layout = QVBoxLayout(self)
+        self.setLayout(layout)
+        self.ds = DataSource()
+        self.worker = UpdateUserWorker()
+        self.worker_thread = QThread()
+        self.worker_thread.started.connect(self.worker.run)
+        self.worker.finished.connect(self.worker_thread.quit)
+        self.worker.moveToThread(self.worker_thread)
+        self.worker_thread.start()
+        self.worker.processed.connect(self.processed)
+
+    @Slot(int, int)
+    def processed(self, user):
+        print('\t\t\tUSER: ' + str(user['id']) + ', ' + str(user['name']) + ', ' + str(user['registered']) + ', ' + str(
+            user['nation']))
+
+    def finish(self):
+        self.worker.finish()
+        self.worker_thread.quit()
+        self.worker_thread.wait()
+
+
 class MyWindow(QMainWindow):
 
     def __init__(self):
@@ -137,21 +159,28 @@ class MyWindow(QMainWindow):
         self.setWindowTitle("RuTracker.org")
         self.setGeometry(200, 200, 640, 480)
         self.tabwidget = QTabWidget()
+
         self.rsslbl = QLabel("RSS")
         self.rsslist = QListWidget(self)
         self.rss = RssWidget()
         self.rss.splitter.restoreState(settings.value('main/rss/splitter'))
         self.tabwidget.addTab(self.rss, "rss")
+
         self.twidget = TorrentsWidget()
         self.twidget.splitter.restoreState(settings.value('main/new/splitter'))
         self.twidget.list.header().restoreState(settings.value('main/new/tree'))
         self.tabwidget.addTab(self.twidget, "new torrents")
+
         self.t2widget = Torrents2Widget()
         self.t2widget.splitter.restoreState(settings.value('main/update/splitter'))
         self.tabwidget.addTab(self.t2widget, "check torrents")
         self.setCentralWidget(self.tabwidget)
-        self.ds = DataSource()
 
+        self.userwidget = UserWidget()
+        self.tabwidget.addTab(self.userwidget, "users")
+        self.setCentralWidget(self.tabwidget)
+        
+        self.ds = DataSource()
         self.resize(settings.value('main/size', QSize(640, 480)))
         self.move(settings.value('main/pos', QPoint(200, 200)))
 

@@ -257,3 +257,20 @@ class DataSource:
             return False
         finally:
             db.close()
+
+    def save_user(self, user):
+        db = self.get_db()
+        try:
+            if not db.isOpen():
+                db.open()
+            query = QSqlQuery(db=db)
+            query.prepare('insert into users(id, name, registered, nation) values(:id, :name, :reg, :nation)')
+            query.bindValue(':id', torrent[0])
+            query.bindValue(':name', torrent[1])
+            query.bindValue(':reg', torrent[2])
+            query.bindValue(':nation', torrent[3])
+            return query.exec_()
+        except Exception as ex:
+            return False
+        finally:
+            db.close()

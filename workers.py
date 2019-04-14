@@ -149,3 +149,29 @@ class UpdateTorrentWorker(QObject):
         self.torrents += 1
         self.processed.emit(topic)
         sleep(8)
+        
+        
+class UpdateUserWorker(QObject):
+    processed = Signal(dict)
+    finished = Signal()
+
+    def __init__(self):
+        QObject.__init__(self)
+        self.ds = DataSource()
+        self.terminating = False
+        self.torrents = 0
+
+    def run(self):
+        while not self.terminating:
+            try:
+                self.process()
+            except Exception as e:
+                print('ADDING USER EXCEPTION: ' + str(e))
+        self.finished.emit()
+
+    def finish(self):
+        self.terminating = True
+
+    def process(self):
+        self.processed.emit(topic)
+        sleep(8)

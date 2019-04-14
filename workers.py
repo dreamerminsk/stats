@@ -159,7 +159,6 @@ class UpdateUserWorker(QObject):
         QObject.__init__(self)
         self.ds = DataSource()
         self.terminating = False
-        self.torrents = 0
 
     def run(self):
         while not self.terminating:

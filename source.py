@@ -258,7 +258,7 @@ class DataSource:
         finally:
             db.close()
 
-    def save_user(self, user):
+    def insert_user(self, user):
         db = self.get_db()
         try:
             if not db.isOpen():
@@ -269,6 +269,23 @@ class DataSource:
             query.bindValue(':name', torrent[1])
             query.bindValue(':reg', torrent[2])
             query.bindValue(':nation', torrent[3])
+            return query.exec_()
+        except Exception as ex:
+            return False
+        finally:
+            db.close()
+
+    def update_user(self, user):
+        db = self.get_db()
+        try:
+            if not db.isOpen():
+                db.open()
+            query = QSqlQuery(db=db)
+            query.prepare('update users set name=:name, registered=:reg, nation=:nation where id=:id')
+            query.bindValue(':id', user['id'])
+            query.bindValue(':name', user['name'])
+            query.bindValue(':reg', user['registered'])
+            query.bindValue(':nation', user['nation'])
             return query.exec_()
         except Exception as ex:
             return False

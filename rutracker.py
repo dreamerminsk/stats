@@ -110,6 +110,20 @@ def get_user(id):
     url = USER_URL + str(id)
     return get_page(url)
 
+def get_user2(user_id):
+    url = USER_URL + str(user_id)
+    doc, error = get_page(url)
+    if error is not None:
+        return (None, error)
+    parser = UserParser()
+    user = parser.parse(doc)
+    user['id'] = user_id
+return (user, None)
+
+
+class UserParser:
+    pass
+
 
 class TopicParser:
     @staticmethod

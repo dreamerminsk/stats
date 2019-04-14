@@ -115,14 +115,48 @@ def get_user2(user_id):
     doc, error = get_page(url)
     if error is not None:
         return (None, error)
-    parser = UserParser()
-    user = parser.parse(doc)
+    user = UserParser.parse(doc)
     user['id'] = user_id
-return (user, None)
+    return (user, None)
 
 
 class UserParser:
-    pass
+    
+    @staticmethod
+    def get_title(doc):
+        title = None
+        t = doc.select_one('title')
+        if t:
+            title = t.text.strip()
+        return title
+
+    @staticmethod
+    def get_registered(doc):
+        registered = None
+        for item in doc.select('table.user_details tr'):
+            if 'Зарегистрирован' in item.text:
+                r = item.select_one('td b')
+                if r:
+                    registered = r.text.strip()
+        return registered
+
+    @staticmethod
+    def get_nation(doc):
+        nation = None
+        for item in doc.select('table.user_details tr'):
+            if 'Откуда' in item.text:
+                r = item.select_one('td img')
+                if r:
+                    nation = r.get('title')
+        return nation
+
+    @staticmethod
+    def parse(doc):
+        u = {}
+        u['name'] = get_title(doc)
+        u['registered'] = get_registered(doc)
+        u['nation'] = get_nation(doc)
+    return u
 
 
 class TopicParser:

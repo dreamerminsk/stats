@@ -1,6 +1,7 @@
 ﻿import pickle
 from datetime import datetime
 from urllib.parse import urlparse, parse_qs
+import threading
 
 import requests
 from bs4 import BeautifulSoup
@@ -65,22 +66,28 @@ def get_page(ref):
     
     
 class WebClient():
-    def get_page(ref):
-        try:
-            r = s.get(ref, timeout=24)
+    __lock__ = threading.RLock()
+    __session__ = requests.Session()
+
+    def __init__(self):
+        WebClient.__session__.cookies = self.load_cookies()
+
+    def get_page(self, ref):
+        with __lock__:
+            r = WebClient.__session__.get(ref, timeout=24)
             doc = BeautifulSoup(r.text, 'html.parser')
             return (doc, None)
         except Exception as ex:
             return (None, ex)    
     
     
-    def load_cookies():
+    def load_cookies(self):
         with open('cookie.dat', 'rb') as f:
             cookies = pickle.load(f)
         return cookies
 
 
-    def save_cookies(cookies):
+    def save_cookies(self, cookies):
         with open('cookie.dat', 'wb') as f:
             pickle.dump(cookies, f)
 

@@ -135,10 +135,13 @@ class UpdateTorrentWorker(QObject):
             return
         topic, error = rutracker.get_topic2(t['id'])
         if error is not None:
-            print(error)
+            self.torrents += 1
+            self.processed.emit(topic)
+            sleep(8)
             return
         if not topic['title']:
-            topic['title'] = t['title']
+            sleep(8)
+            return
         if t['seed'] > topic['seed']:
             topic['seed'] = t['seed']
         if t['leech'] > topic['leech']:

@@ -72,13 +72,13 @@ class WebClient():
     def __init__(self):
         WebClient.__session__.cookies = self.load_cookies()
 
-    def get_page(self, ref):
-        with __lock__:
-            r = WebClient.__session__.get(ref, timeout=24)
-            doc = BeautifulSoup(r.text, 'html.parser')
-            return (doc, None)
-        except Exception as ex:
-            return (None, ex)    
+    #def get_page(self, ref):
+    #    with __lock__:
+    #        r = WebClient.__session__.get(ref, timeout=24)
+    #        doc = BeautifulSoup(r.text, 'html.parser')
+    #        return (doc, None)
+    #    except Exception as ex:
+    #        return (None, ex)    
     
     
     def load_cookies(self):

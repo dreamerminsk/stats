@@ -141,7 +141,9 @@ class UpdateTorrentWorker(QObject):
             return
         if topic['message']:
             print('\tCHECKING: ' + str(topic['id']) + topic['message'])
-            self.processed.emit(topic)
+            t['message'] = topic['message']
+            self.ds.insert_torrent(t)
+            self.processed.emit(t)
             sleep(8)
             return
         if not topic['title']:

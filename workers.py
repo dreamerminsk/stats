@@ -139,7 +139,14 @@ class UpdateTorrentWorker(QObject):
             self.processed.emit(topic)
             sleep(8)
             return
+        if topic['message']:
+            print('\tCHECKING: ' + str(topic['id']) + topic['message'])
+            self.processed.emit(topic)
+            sleep(8)
+            return
         if not topic['title']:
+            self.torrents += 1
+            self.processed.emit(topic)
             sleep(8)
             return
         if t['seed'] > topic['seed']:

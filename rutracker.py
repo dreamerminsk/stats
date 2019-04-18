@@ -167,6 +167,15 @@ class UserParser:
 
 
 class TopicParser:
+    
+    @staticmethod
+    def get_message(doc):
+        title = None
+        t = doc.select_one('div.mrg_16')
+        if t:
+            title = t.text.strip()
+        return title
+
     @staticmethod
     def get_title(doc):
         title = None
@@ -253,6 +262,7 @@ class TopicParser:
 
     def parse(self, doc):
         topic = dict()
+        topic['message'] = self.get_message(doc)
         topic['forum'] = self.get_forum(doc)
         topic['title'] = self.get_title(doc)
         topic['seed'] = self.get_seed(doc)

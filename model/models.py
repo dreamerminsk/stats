@@ -1,8 +1,6 @@
 ﻿from datetime import datetime
 
 from PySide2.QtCore import QAbstractItemModel, Qt, QModelIndex, QObject
-from PySide2.QtGui import QColor
-from PySide2.QtWidgets import QApplication
 
 
 class RssRootCategoryItem:
@@ -187,10 +185,10 @@ class PublishedNewTorrent(QObject):
     def child(self, index):
         if index == 0:
             return self.none
-        return self.years[index-1]
+        return self.years[index - 1]
 
     def childCount(self):
-        return len(self.years)+1
+        return len(self.years) + 1
 
     def data(self, index):
         if index == 0:
@@ -215,6 +213,8 @@ class PublishedNewTorrent(QObject):
 
     def find(self, published: datetime):
         if published == None:
+            return self.none
+        if published == 'None':
             return self.none
         for year in self.years:
             if year.year == published.year:
@@ -261,7 +261,7 @@ class YearNewTorrent(QObject):
         return self.parent_item
 
     def row(self):
-        return self.parent_item.years.index(self)+1
+        return self.parent_item.years.index(self) + 1
 
     @property
     def topics(self):
@@ -360,7 +360,7 @@ class DayNewTorrent(QObject):
     def row(self):
         return self.parent_item.days.index(self)
 
-		
+
 class NoneNewTorrent(QObject):
 
     def __init__(self, parent) -> object:
@@ -386,6 +386,7 @@ class NoneNewTorrent(QObject):
 
     def row(self):
         return 0
+
 
 class NewTorrentModel(QAbstractItemModel):
 
@@ -461,7 +462,7 @@ class NewTorrentModel(QAbstractItemModel):
     def setItemData(self, index, roles):
         return False
 
-    def add_topic(self,	published):
+    def add_topic(self, published):
         print('\t\t\tADD_TOPIC: ' + str(published))
         p = self.root.find(published)
         print('\t\t\tADD_TOPIC: ' + str(p))

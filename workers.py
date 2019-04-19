@@ -142,7 +142,9 @@ class UpdateTorrentWorker(QObject):
         if topic['message']:
             print('\tCHECKING: ' + str(topic['id']) + topic['message'])
             t['message'] = topic['message']
-            self.ds.insert_torrent(t)
+            t['last_checked'] = datetime.now()
+            if not self.ds.insert_torrent(t):
+                print('ERROR-ERROR: ' + str(t))
             self.processed.emit(t)
             sleep(8)
             return

@@ -1,6 +1,7 @@
 ﻿from datetime import datetime
 
 from PySide2.QtCore import QAbstractItemModel, Qt, QModelIndex, QObject
+from dateutil.parser import parse
 
 
 class RssRootCategoryItem:
@@ -212,6 +213,7 @@ class PublishedNewTorrent(QObject):
         return topics
 
     def find(self, published: datetime):
+        print('TOPIC FIND: ' + str(type(published)) + '| ' + str(published))
         if published == None:
             return self.none
         if published == 'None':
@@ -463,6 +465,8 @@ class NewTorrentModel(QAbstractItemModel):
         return False
 
     def add_topic(self, published):
+        if type(published) == str:
+            published = parse(published)
         print('\t\t\tADD_TOPIC: ' + str(published))
         p = self.root.find(published)
         print('\t\t\tADD_TOPIC: ' + str(p))

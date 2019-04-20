@@ -187,6 +187,7 @@ class UpdateUserWorker(QObject):
 
     def process(self):
         u = self.ds.get_new_user()
+        print('\t\tUSER: ' + str(u))
         if 'id' not in u:
             return
         user, error = rutracker.get_user2(u['id'])

@@ -190,6 +190,8 @@ class UpdateUserWorker(QObject):
         print('\t\tUSER: ' + str(u))
         if 'id' not in u:
             return
+        if u['id'] == '':
+            return
         user, error = rutracker.get_user2(u['id'])
         if error is not None:
             print(error)

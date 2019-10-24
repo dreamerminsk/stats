@@ -33,6 +33,16 @@ def store(id, f, title):
     except Exception as ex:
         print('\t' + ex.__class__.__name__ + ':' + str(ex))
 
+def get_page(ref):
+    feed_update_count = 0
+    while True:
+        try: 
+            return requests.get(ref)
+        except: 
+            time.sleep(feed_update_count)
+            feed_update_count +=1
+        if feed_update_count >= 32:
+            return None
 
 before = db.execute('select count(id) from torrents').fetchone()[0]
 cur = db.execute('''select id, title, last_updated,
@@ -63,7 +73,9 @@ for f in forums:
         print(str(cp) + ' of ' + str(tp) + '> ' + url)
         cp += 1
         time.sleep(1 + random.randint(0, 3))
-        r = requests.get(url)
+        r = get_page(url)
+        if r == None:
+            break
         print('  length=' + str(len(r.text)))
         doc = BeautifulSoup(r.text, 'html.parser')
         url = ''

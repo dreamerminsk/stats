@@ -22,7 +22,7 @@ class RssWorker(QObject):
 
     def get_page(self, ref):
         try:
-            r = requests.get(ref, timeout=24)
+            r = requests.get(ref, timeout=32)
             doc = BeautifulSoup(r.text, 'html.parser')
             return doc, None
         except Exception as ex:
@@ -105,7 +105,7 @@ class NewTorrentWorker(QObject):
         self.ds.insert_torrent(topic)
         self.torrents += 1
         self.processed.emit(topic)
-        sleep(8)
+        sleep(4)
 
 
 class UpdateTorrentWorker(QObject):
@@ -137,7 +137,7 @@ class UpdateTorrentWorker(QObject):
         if error is not None:
             self.torrents += 1
             self.processed.emit(topic)
-            sleep(8)
+            sleep(4)
             return
         if topic['message']:
             print('\tCHECKING: ' + str(topic['id']) + topic['message'])
@@ -146,12 +146,12 @@ class UpdateTorrentWorker(QObject):
             if not self.ds.insert_torrent(t):
                 print('ERROR-ERROR: ' + str(t))
             self.processed.emit(t)
-            sleep(8)
+            sleep(4)
             return
         if not topic['title']:
             self.torrents += 1
             self.processed.emit(topic)
-            sleep(8)
+            sleep(4)
             return
         if t['seed'] > topic['seed']:
             topic['seed'] = t['seed']
@@ -162,7 +162,7 @@ class UpdateTorrentWorker(QObject):
         self.ds.insert_torrent(topic)
         self.torrents += 1
         self.processed.emit(topic)
-        sleep(8)
+        sleep(4)
         
         
 class UpdateUserWorker(QObject):
@@ -198,4 +198,4 @@ class UpdateUserWorker(QObject):
             return
         self.ds.insert_user(user)
         self.processed.emit(user)
-        sleep(8)
+        sleep(4)

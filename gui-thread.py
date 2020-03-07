@@ -83,6 +83,7 @@ class Torrents2Widget(QWidget):
     def processed(self, topic):
         self.model.add_topic(topic['published'])
 
+
 class RssWidget(QWidget):
     newtorrents = Signal(int)
 
@@ -109,7 +110,6 @@ class RssWidget(QWidget):
         self.worker.moveToThread(self.worker_thread)
         self.worker_thread.start()
         self.worker.processed.connect(self.processed)
-
 
     @Slot(int, int)
     def processed(self, forum_id, torrents):
@@ -179,7 +179,7 @@ class MyWindow(QMainWindow):
         self.userwidget = UserWidget()
         self.tabwidget.addTab(self.userwidget, "users")
         self.setCentralWidget(self.tabwidget)
-        
+
         self.ds = DataSource()
         self.resize(settings.value('main/size', QSize(640, 480)))
         self.move(settings.value('main/pos', QPoint(200, 200)))

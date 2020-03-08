@@ -3,7 +3,8 @@ from datetime import datetime
 
 from PySide2.QtCore import Signal, Slot, QThread, QSettings, QSize, QPoint, QSortFilterProxyModel, Qt
 from PySide2.QtGui import QFont
-from PySide2.QtWidgets import QApplication, QMainWindow, QLabel, QTabWidget, QListWidget, QSplitter, QTreeView
+from PySide2.QtWidgets import QApplication, QMainWindow, QLabel, QTabWidget, QListWidget, QSplitter, QTreeView, \
+    QPlainTextEdit
 from PySide2.QtWidgets import QStyleFactory
 from PySide2.QtWidgets import QWidget, QTableWidget, QVBoxLayout
 
@@ -145,6 +146,8 @@ class UserWidget(QWidget):
     def __init__(self):
         QWidget.__init__(self)
         layout = QVBoxLayout(self)
+        self.text = QPlainTextEdit()
+        layout.addWidget(self.text)
         self.setLayout(layout)
         self.ds = DataSource()
         self.worker = UpdateUserWorker()
@@ -155,8 +158,9 @@ class UserWidget(QWidget):
         self.worker_thread.start()
         self.worker.processed.connect(self.processed)
 
-    @Slot(int, int)
+    @Slot(dict)
     def processed(self, user):
+        self.text.appendPlainText('USER: {}'.format(str(user)))
         print('\t\t\tUSER: ' + str(user['id']) + ', ' + str(user['name']) + ', ' + str(user['registered']) + ', ' + str(
             user['nation']))
 

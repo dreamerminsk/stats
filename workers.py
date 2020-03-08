@@ -191,6 +191,7 @@ class UpdateUserWorker(QObject):
         u = self.ds.get_new_user()
         print('\t\tUSER: ' + str(u))
         if 'id' not in u:
+            self.processed.emit(u)
             return
         if u['id'] == '':
             return

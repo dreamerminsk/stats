@@ -161,8 +161,6 @@ class UserWidget(QWidget):
     @Slot(dict)
     def processed(self, user):
         self.text.appendPlainText('USER: {}'.format(str(user)))
-        print('\t\t\tUSER: ' + str(user['id']) + ', ' + str(user['name']) + ', ' + str(user['registered']) + ', ' + str(
-            user['nation']))
 
     def finish(self):
         self.worker.finish()

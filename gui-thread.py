@@ -124,7 +124,7 @@ class RssWidget(QWidget):
     def current(self, topic):
         for i in range(len(self.stats) - 1):
             self.stats[i].setText(self.stats[i + 1].text())
-        self.stats[len(self.stats)].setText('{0} - {1}'.format(datetime.now(), topic))
+        self.stats[len(self.stats) - 1].setText('{0} - {1}'.format(datetime.now(), topic))
 
     @Slot(int, int)
     def processed(self, forum_id, torrents):

@@ -1,7 +1,8 @@
 ﻿import sys
+from datetime import datetime
 
-from PySide2.QtCore import Signal, Slot, QThread, QSettings, QSize, QPoint, \
-    QSortFilterProxyModel
+from PySide2.QtCore import Signal, Slot, QThread, QSettings, QSize, QPoint, QSortFilterProxyModel, Qt
+from PySide2.QtGui import QFont
 from PySide2.QtWidgets import QApplication, QMainWindow, QLabel, QTabWidget, QListWidget, QSplitter, QTreeView
 from PySide2.QtWidgets import QStyleFactory
 from PySide2.QtWidgets import QWidget, QTableWidget, QVBoxLayout
@@ -99,8 +100,15 @@ class RssWidget(QWidget):
         self.cats.setModel(proxy)
         self.splitter.addWidget(self.cats)
         self.t = QTableWidget(0, 4, self)
-        self.splitter.addWidget(self.t)
-        layout.addWidget(self.splitter)
+        self.splitter.addWidget(self.t)		
+        self.stats = QLabel('{}'.format(datetime.now()))
+
+        font = QFont()
+        font.setPointSize(12)
+        self.stats.setFont(font)
+        layout.addWidget(self.stats, 0, Qt.AlignTop)
+
+        layout.addWidget(self.splitter, 2, Qt.AlignTop)
         self.setLayout(layout)
         self.ds = DataSource()
         self.worker = RssWorker()
@@ -110,6 +118,11 @@ class RssWidget(QWidget):
         self.worker.moveToThread(self.worker_thread)
         self.worker_thread.start()
         self.worker.processed.connect(self.processed)
+        self.worker.current.connect(self.current)
+		
+    @Slot(str)
+    def current(self, topic):
+        self.stats.setText('{0} - {1}'.format(datetime.now(),topic))
 
     @Slot(int, int)
     def processed(self, forum_id, torrents):

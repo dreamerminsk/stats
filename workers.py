@@ -12,6 +12,7 @@ from source import DataSource
 
 class RssWorker(QObject):
     processed = Signal(int, int)
+    current = Signal(str)
     error = Signal(Exception)
     finished = Signal()
 
@@ -47,7 +48,7 @@ class RssWorker(QObject):
     def process(self):
         torrents = 0
         f = self.ds.get_forum_to_scan()
-        print('RSS: ' + str(f))
+        self.current.emit(str(f))
         if 'id' not in f:
             sleep(4)
             return

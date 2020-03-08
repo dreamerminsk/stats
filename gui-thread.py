@@ -123,7 +123,7 @@ class RssWidget(QWidget):
     @Slot(str)
     def current(self, topic):
         for i in range(len(self.stats) - 1):
-            self.stats[i].setText(self.stats[i + 1].getText())
+            self.stats[i].setText(self.stats[i + 1].text())
         self.stats[len(self.stats)].setText('{0} - {1}'.format(datetime.now(), topic))
 
     @Slot(int, int)

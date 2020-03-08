@@ -101,14 +101,14 @@ class RssWidget(QWidget):
         self.splitter.addWidget(self.cats)
         self.t = QTableWidget(0, 4, self)
         self.splitter.addWidget(self.t)
-        self.stats = [QLabel('{}'.format(datetime.now())) for _ in range(3)]
+        self.stats = [QLabel('{}'.format(datetime.now())) for _ in range(8)]
 
         stat: QLabel
         for stat in self.stats:
-            stat.setFont(QFont(pointSize=12))
+            stat.setFont(QFont(pointSize=14))
             layout.addWidget(stat, 0, Qt.AlignTop)
 
-        layout.addWidget(self.splitter, 2, Qt.AlignTop)
+        layout.addWidget(self.splitter, 5, Qt.AlignTop)
         self.setLayout(layout)
         self.ds = DataSource()
         self.worker = RssWorker()

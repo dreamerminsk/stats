@@ -100,13 +100,13 @@ class RssWidget(QWidget):
         self.cats.setModel(proxy)
         self.splitter.addWidget(self.cats)
         self.t = QTableWidget(0, 4, self)
-        self.splitter.addWidget(self.t)		
-        self.stats = QLabel('{}'.format(datetime.now()))
+        self.splitter.addWidget(self.t)
+        self.stats = [QLabel('{}'.format(datetime.now())) for _ in range(3)]
 
-        font = QFont()
-        font.setPointSize(12)
-        self.stats.setFont(font)
-        layout.addWidget(self.stats, 0, Qt.AlignTop)
+        stat: QLabel
+        for stat in self.stats:
+            stat.setFont(QFont(pointSize=12))
+            layout.addWidget(stat, 0, Qt.AlignTop)
 
         layout.addWidget(self.splitter, 2, Qt.AlignTop)
         self.setLayout(layout)
@@ -119,10 +119,12 @@ class RssWidget(QWidget):
         self.worker_thread.start()
         self.worker.processed.connect(self.processed)
         self.worker.current.connect(self.current)
-		
+
     @Slot(str)
     def current(self, topic):
-        self.stats.setText('{0} - {1}'.format(datetime.now(),topic))
+        for i in range(len(self.stats) - 1):
+            self.stats[i].setText(self.stats[i + 1].getText())
+        self.stats[len(self.stats)].setText('{0} - {1}'.format(datetime.now(), topic))
 
     @Slot(int, int)
     def processed(self, forum_id, torrents):

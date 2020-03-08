@@ -21,7 +21,8 @@ class RssWorker(QObject):
         self.ds = DataSource()
         self.terminating = False
 
-    def get_page(self, ref):
+    @staticmethod
+    def get_page(ref):
         try:
             r = requests.get(ref, timeout=32)
             doc = BeautifulSoup(r.text, 'html.parser')
@@ -164,8 +165,8 @@ class UpdateTorrentWorker(QObject):
         self.torrents += 1
         self.processed.emit(topic)
         sleep(4)
-        
-        
+
+
 class UpdateUserWorker(QObject):
     processed = Signal(dict)
     finished = Signal()

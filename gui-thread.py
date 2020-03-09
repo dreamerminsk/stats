@@ -168,7 +168,16 @@ class UserWidget(QWidget):
         self.worker_thread.wait()
 
 
-class MyWindow(QMainWindow):
+class HttpClientWidget(QWidget):
+    def __init__(self):
+        QWidget.__init__(self)
+        layout = QVBoxLayout(self)
+        self.text = QPlainTextEdit()
+        layout.addWidget(self.text)
+        self.setLayout(layout)
+
+
+class MainWindow(QMainWindow):
 
     def __init__(self):
         QMainWindow.__init__(self)
@@ -196,6 +205,10 @@ class MyWindow(QMainWindow):
         self.userwidget = UserWidget()
         self.tabwidget.addTab(self.userwidget, "users")
         self.setCentralWidget(self.tabwidget)
+		
+        self.webwidget = HttpClientWidget()
+        self.tabwidget.addTab(self.webwidget, "http")
+        self.setCentralWidget(self.tabwidget)
 
         self.ds = DataSource()
         self.resize(settings.value('main/size', QSize(640, 480)))
@@ -218,6 +231,6 @@ class MyWindow(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     QApplication.setStyle(QStyleFactory.create('Fusion'))
-    window = MyWindow()
+    window = MainWindow()
     window.show()
     sys.exit(app.exec_())

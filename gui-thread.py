@@ -173,6 +173,8 @@ class UserTab(QWidget):
 
 
 class WebClientTab(QWidget):
+    title = 'webclient'
+
     def __init__(self):
         QWidget.__init__(self)
         layout = QVBoxLayout(self)
@@ -207,7 +209,7 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.user_tab, "users")
 
         self.web_tab = WebClientTab()
-        self.tabs.addTab(self.web_tab, "http")
+        self.tabs.addTab(self.web_tab, self.web_tab.title)
         self.setCentralWidget(self.tabs)
 
         self.ds = DataSource()

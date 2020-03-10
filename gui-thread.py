@@ -144,8 +144,7 @@ class ForumsModel(QAbstractItemModel):
         pass
 
     def rowCount(self, parent=None, *args, **kwargs):  # real signature unknown; NOTE: unreliably restored from __doc__
-        """ rowCount(self, parent: PySide2.QtCore.QModelIndex = Invalid(PySide2.QtCore.QModelIndex)) -> int """
-        pass
+        return 0
 
     def __init__(self, *args, **kwargs):
         super().__init__()

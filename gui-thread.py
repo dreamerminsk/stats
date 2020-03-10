@@ -1,7 +1,8 @@
 ﻿import sys
 from datetime import datetime
 
-from PySide2.QtCore import Signal, QSortFilterProxyModel, QThread, QSettings, QSize, QPoint, Slot, Qt
+from PySide2.QtCore import Signal, QSortFilterProxyModel, QThread, QSettings, QSize, QPoint, Slot, Qt, \
+    QAbstractItemModel
 from PySide2.QtGui import QFont
 from PySide2.QtWidgets import QWidget, QListWidget, QVBoxLayout, QSplitter, QTreeView, QTableWidget, QLabel, QTableView, \
     QPlainTextEdit, QMainWindow, QTabWidget, QApplication, QStyleFactory
@@ -84,8 +85,74 @@ class Torrents2Tab(QWidget):
         self.model.add_topic(topic['published'])
 
 
+class ForumsModel(QAbstractItemModel):
+    def columnCount(self, parent=None, *args,
+                    **kwargs):  # real signature unknown; NOTE: unreliably restored from __doc__
+        """ columnCount(self, parent: PySide2.QtCore.QModelIndex = Invalid(PySide2.QtCore.QModelIndex)) -> int """
+        pass
+
+    def createIndex(self, row, column, id=0):  # real signature unknown; restored from __doc__
+        """
+        createIndex(self, row: int, column: int, id: int = 0) -> PySide2.QtCore.QModelIndex
+        createIndex(self, row: int, column: int, ptr: object) -> PySide2.QtCore.QModelIndex
+        """
+        pass
+
+    def data(self, index, role=None):  # real signature unknown; restored from __doc__
+        """ data(self, index: PySide2.QtCore.QModelIndex, role: int = PySide2.QtCore.Qt.ItemDataRole.DisplayRole) -> typing.Any """
+        pass
+
+    def dataChanged(self, *args, **kwargs):  # real signature unknown
+        pass
+
+    def decodeData(self, row, column, parent, stream):  # real signature unknown; restored from __doc__
+        """ decodeData(self, row: int, column: int, parent: PySide2.QtCore.QModelIndex, stream: PySide2.QtCore.QDataStream) -> bool """
+        return False
+
+    def flags(self, index):  # real signature unknown; restored from __doc__
+        """ flags(self, index: PySide2.QtCore.QModelIndex) -> PySide2.QtCore.Qt.ItemFlags """
+        pass
+
+    def hasChildren(self, parent=None, *args,
+                    **kwargs):  # real signature unknown; NOTE: unreliably restored from __doc__
+        """ hasChildren(self, parent: PySide2.QtCore.QModelIndex = Invalid(PySide2.QtCore.QModelIndex)) -> bool """
+        pass
+
+    def hasIndex(self, row, column, parent=None, *args,
+                 **kwargs):  # real signature unknown; NOTE: unreliably restored from __doc__
+        """ hasIndex(self, row: int, column: int, parent: PySide2.QtCore.QModelIndex = Invalid(PySide2.QtCore.QModelIndex)) -> bool """
+        pass
+
+    def headerData(self, section, orientation, role=None):  # real signature unknown; restored from __doc__
+        """ headerData(self, section: int, orientation: PySide2.QtCore.Qt.Orientation, role: int = PySide2.QtCore.Qt.ItemDataRole.DisplayRole) -> typing.Any """
+        pass
+
+    def index(self, row, column, parent=None, *args,
+              **kwargs):  # real signature unknown; NOTE: unreliably restored from __doc__
+        """ index(self, row: int, column: int, parent: PySide2.QtCore.QModelIndex = Invalid(PySide2.QtCore.QModelIndex)) -> PySide2.QtCore.QModelIndex """
+        pass
+
+    def itemData(self, index):  # real signature unknown; restored from __doc__
+        """ itemData(self, index: PySide2.QtCore.QModelIndex) -> typing.Dict """
+        pass
+
+    def parent(self):  # real signature unknown; restored from __doc__
+        """
+        parent(self) -> PySide2.QtCore.QObject
+        parent(self, child: PySide2.QtCore.QModelIndex) -> PySide2.QtCore.QModelIndex
+        """
+        pass
+
+    def rowCount(self, parent=None, *args, **kwargs):  # real signature unknown; NOTE: unreliably restored from __doc__
+        """ rowCount(self, parent: PySide2.QtCore.QModelIndex = Invalid(PySide2.QtCore.QModelIndex)) -> int """
+        pass
+
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+
+
 class RssTab(QWidget):
-    newtorrents = Signal(int)
+    new_torrents = Signal(int)
 
     def __init__(self):
         QWidget.__init__(self)
@@ -107,10 +174,10 @@ class RssTab(QWidget):
             stat.setFont(QFont(pointSize=14))
             layout.addWidget(stat, 0, Qt.AlignTop)
 
-        layout.addWidget(self.splitter, 5, Qt.AlignTop)
+        layout.addWidget(self.splitter, 0, Qt.AlignTop)
 
         self.forums = QTableView(self)
-        layout.addWidget(self.forums)
+        layout.addWidget(self.forums, 4, Qt.AlignTop)
 
         self.setLayout(layout)
         self.ds = DataSource()

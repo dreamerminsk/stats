@@ -100,13 +100,12 @@ class RssCategoryModel(QAbstractItemModel):
         if not parent.isValid():
             return self.createIndex(row, column, self.rssroot)
         else:
-            parentItem = parent.internalPointer()
-            childItem: object = parentItem.child(row)
-            if childItem:
-                return self.createIndex(row, column, childItem)
+            parent_item = parent.internalPointer()
+            child_item: object = parent_item.child(row)
+            if child_item:
+                return self.createIndex(row, column, child_item)
             else:
-                return QModelIndex();
-        return QModelIndex()
+                return QModelIndex()
 
     def insertRow(self, row, parent=None, *args, **kwargs):
         pass
@@ -120,11 +119,11 @@ class RssCategoryModel(QAbstractItemModel):
     def parent(self, child):
         if not child.isValid():
             return QModelIndex()
-        childItem = child.internalPointer()
-        parentItem = childItem.parent()
-        if (parentItem == None):
+        child_item = child.internalPointer()
+        parent_item = child_item.parent()
+        if (parent_item == None):
             return QModelIndex()
-        return self.createIndex(parentItem.row(), 0, parentItem);
+        return self.createIndex(parent_item.row(), 0, parent_item);
 
     def rowCount(self, parent=None, *args, **kwargs):
         if parent.column() > 0:
@@ -132,8 +131,8 @@ class RssCategoryModel(QAbstractItemModel):
         if not parent.isValid():
             return 1
         else:
-            parentItem = parent.internalPointer()
-        return parentItem.childCount()
+            parent_item = parent.internalPointer()
+        return parent_item.childCount()
 
     def addCategory(self, category, torrents):
         cat = None
@@ -172,7 +171,7 @@ class PublishedNewTorrent(QObject):
 
     def addChild(self, child) -> object:
         queue = []
-        if child == None:
+        if child is None:
             return queue
         for y in self.years:
             if y.year == child.year:
@@ -214,7 +213,7 @@ class PublishedNewTorrent(QObject):
 
     def find(self, published: datetime):
         print('TOPIC FIND: ' + str(type(published)) + '| ' + str(published))
-        if published == None:
+        if published is None:
             return self.none
         if published == 'None':
             return self.none

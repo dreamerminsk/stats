@@ -4,7 +4,7 @@ from datetime import datetime
 from PySide2.QtCore import Signal, Slot, QThread, QSettings, QSize, QPoint, QSortFilterProxyModel, Qt
 from PySide2.QtGui import QFont
 from PySide2.QtWidgets import QApplication, QMainWindow, QLabel, QTabWidget, QListWidget, QSplitter, QTreeView, \
-    QPlainTextEdit
+    QPlainTextEdit, QTableView
 from PySide2.QtWidgets import QStyleFactory
 from PySide2.QtWidgets import QWidget, QTableWidget, QVBoxLayout
 
@@ -13,7 +13,7 @@ from source import DataSource
 from workers import RssWorker, NewTorrentWorker, UpdateTorrentWorker, UpdateUserWorker
 
 
-class TorrentsWidget(QWidget):
+class TorrentsTab(QWidget):
     list: QListWidget
     newtorrents = Signal(int)
 
@@ -50,7 +50,7 @@ class TorrentsWidget(QWidget):
         self.model.add_topic(topic['published'])
 
 
-class Torrents2Widget(QWidget):
+class Torrents2Tab(QWidget):
     newtorrents = Signal(int)
 
     def __init__(self):
@@ -86,7 +86,7 @@ class Torrents2Widget(QWidget):
         self.model.add_topic(topic['published'])
 
 
-class RssWidget(QWidget):
+class RssTab(QWidget):
     newtorrents = Signal(int)
 
     def __init__(self):
@@ -110,6 +110,10 @@ class RssWidget(QWidget):
             layout.addWidget(stat, 0, Qt.AlignTop)
 
         layout.addWidget(self.splitter, 5, Qt.AlignTop)
+
+        self.forums = QTableView(self)
+        layout.addWidget(self.forums)
+
         self.setLayout(layout)
         self.ds = DataSource()
         self.worker = RssWorker()
@@ -142,7 +146,7 @@ class RssWidget(QWidget):
         self.worker_thread.wait()
 
 
-class UserWidget(QWidget):
+class UserTab(QWidget):
     def __init__(self):
         QWidget.__init__(self)
         layout = QVBoxLayout(self)
@@ -168,7 +172,7 @@ class UserWidget(QWidget):
         self.worker_thread.wait()
 
 
-class HttpClientWidget(QWidget):
+class WebClientTab(QWidget):
     def __init__(self):
         QWidget.__init__(self)
         layout = QVBoxLayout(self)
@@ -184,31 +188,27 @@ class MainWindow(QMainWindow):
         settings = QSettings('dreamix Studio', 'rt-stats')
         self.setWindowTitle("RuTracker.org")
         self.setGeometry(200, 200, 640, 480)
-        self.tabwidget = QTabWidget()
+        self.tabs = QTabWidget()
 
-        self.rsslbl = QLabel("RSS")
-        self.rsslist = QListWidget(self)
-        self.rss = RssWidget()
+        self.rss = RssTab()
         self.rss.splitter.restoreState(settings.value('main/rss/splitter'))
-        self.tabwidget.addTab(self.rss, "rss")
+        self.tabs.addTab(self.rss, "rss")
 
-        self.twidget = TorrentsWidget()
+        self.twidget = TorrentsTab()
         self.twidget.splitter.restoreState(settings.value('main/new/splitter'))
         self.twidget.list.header().restoreState(settings.value('main/new/tree'))
-        self.tabwidget.addTab(self.twidget, "new torrents")
+        self.tabs.addTab(self.twidget, "new torrents")
 
-        self.t2widget = Torrents2Widget()
+        self.t2widget = Torrents2Tab()
         self.t2widget.splitter.restoreState(settings.value('main/update/splitter'))
-        self.tabwidget.addTab(self.t2widget, "check torrents")
-        self.setCentralWidget(self.tabwidget)
+        self.tabs.addTab(self.t2widget, "check torrents")
 
-        self.userwidget = UserWidget()
-        self.tabwidget.addTab(self.userwidget, "users")
-        self.setCentralWidget(self.tabwidget)
-		
-        self.webwidget = HttpClientWidget()
-        self.tabwidget.addTab(self.webwidget, "http")
-        self.setCentralWidget(self.tabwidget)
+        self.user_tab = UserTab()
+        self.tabs.addTab(self.user_tab, "users")
+
+        self.web_tab = WebClientTab()
+        self.tabs.addTab(self.web_tab, "http")
+        self.setCentralWidget(self.tabs)
 
         self.ds = DataSource()
         self.resize(settings.value('main/size', QSize(640, 480)))

@@ -1,12 +1,10 @@
 ﻿import sys
 from datetime import datetime
 
-from PySide2.QtCore import Signal, Slot, QThread, QSettings, QSize, QPoint, QSortFilterProxyModel, Qt
+from PySide2.QtCore import Signal, QSortFilterProxyModel, QThread, QSettings, QSize, QPoint, Slot, Qt
 from PySide2.QtGui import QFont
-from PySide2.QtWidgets import QApplication, QMainWindow, QLabel, QTabWidget, QListWidget, QSplitter, QTreeView, \
-    QPlainTextEdit, QTableView
-from PySide2.QtWidgets import QStyleFactory
-from PySide2.QtWidgets import QWidget, QTableWidget, QVBoxLayout
+from PySide2.QtWidgets import QWidget, QListWidget, QVBoxLayout, QSplitter, QTreeView, QTableWidget, QLabel, QTableView, \
+    QPlainTextEdit, QMainWindow, QTabWidget, QApplication, QStyleFactory
 
 from model.models import RssCategoryModel, NewTorrentModel
 from source import DataSource

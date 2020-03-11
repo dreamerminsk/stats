@@ -86,8 +86,9 @@ class Torrents2Tab(QWidget):
 
 
 class ForumsModel(QAbstractTableModel):
-    def columnCount(self, parent=None, *args, **kwargs):
-        print("columnCount: {}".format(parent))
+    columns = ['id', 'category', 'title']
+
+    def columnCount(self, parent=None):
         return 2
 
     def data(self, index, role=None):
@@ -95,10 +96,7 @@ class ForumsModel(QAbstractTableModel):
             return None
         if role == Qt.DisplayRole:
             f = self.forums[index.row()]
-            if index.column() == 0:
-                return f['id']
-            if index.column() == 1:
-                return f['title']
+            return f[self.columns[index.column()]]
         return None
 
     def headerData(self, section, orientation, role=None):
@@ -107,12 +105,9 @@ class ForumsModel(QAbstractTableModel):
         if orientation == Qt.Vertical:
             return section
         if orientation == Qt.Horizontal:
-            if section == 0:
-                return "ID"
-            if section == 1:
-                return "Title"
+            return self.columns[section]
 
-    def rowCount(self, parent=None, *args, **kwargs):
+    def rowCount(self, parent=None):
         return len(self.forums)
 
     def __init__(self, forums):
@@ -149,6 +144,7 @@ class RssTab(QWidget):
         self.f_model = ForumsModel(self.ds.get_forums())
         self.forums = QTableView(self)
         self.forums.setModel(self.f_model)
+        self.forums.resizeColumnsToContents()
         layout.addWidget(self.forums, 10, Qt.AlignTop)
 
         self.setLayout(layout)

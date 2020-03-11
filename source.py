@@ -132,6 +132,25 @@ class DataSource:
         finally:
             db.close()
 
+    def get_forums(self):
+        db = self.get_db()
+        try:
+            if not db.isOpen():
+                db.open()
+            query = QSqlQuery(db=db)
+            query.prepare("SELECT * FROM forums;")
+            query.exec_()
+            forums = []
+            while query.next():
+                forum: Dict[str, Optional[Any]] = {}
+                forum['id'] = query.value('id')
+                forum['category'] = query.value('category')
+                forum['title'] = query.value('title')
+                forums.append(forum)
+            return forums
+        finally:
+            db.close()
+
     def get_forum(self, id):
         db = self.get_db()
         try:

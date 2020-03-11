@@ -163,6 +163,7 @@ class RssCategoryModel(QAbstractItemModel):
 class PublishedNewTorrent(QObject):
 
     def __init__(self) -> object:
+        super().__init__()
         self.none = NoneNewTorrent(self)
         self.years = []
 

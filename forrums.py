@@ -20,10 +20,10 @@ def get_forum(index):
             cat = href[href.find('?c=') + 3:]
             cat_title = item.text.strip()
             print(cat_title)
-    return index, cat, title, 0
+    return index, cat, title, 1
 
 
-db = sqlite3.connect('releases.db', detect_types=sqlite3.PARSE_DECLTYPES)
+db = sqlite3.connect('video.db', detect_types=sqlite3.PARSE_DECLTYPES)
 
 
 def update(forum):
@@ -39,7 +39,9 @@ def update(forum):
 
 def store(forum):
     try:
-        db.execute("insert into forums values (?, ?, ?, ?, datetime('now', 'localtime'))", forum)
+        db.execute(
+            "insert into forums (id, category, title, subscribed, last_updated) values(?, ?, ?, ?, datetime('now', 'localtime'))",
+            forum)
         db.commit()
         cur = db.execute('select * from forums where id=?', (forum[0],))
         print('  insert <', cur.fetchone(), '>')
@@ -50,7 +52,7 @@ def store(forum):
 
 
 r = [560, 794, 793, 556, 436, 969, 2307, 2308, 2309, 2310, 2311, 557, 558]
-for i in range(2540, 2700):
+for i in range(0, 100):
     forum = get_forum(i)
     if forum[2]:
         print(forum)

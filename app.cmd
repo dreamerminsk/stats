@@ -1,1 +1,1 @@
-C:\Users\User\.virtualenvs\stats-gR0PMf-w\Scripts\python.exe C:/Users/User/PycharmProjects/stats/gui-thread.py
+C:\Users\User\.virtualenvs\stats-gR0PMf-w\Scripts\python.exe C:/Users/User/PycharmProjects/stats/forrums.py

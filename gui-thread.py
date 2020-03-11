@@ -89,7 +89,7 @@ class ForumsModel(QAbstractTableModel):
     columns = ['id', 'category', 'title']
 
     def columnCount(self, parent=None):
-        return 2
+        return len(self.columns)
 
     def data(self, index, role=None):
         if not index.isValid():

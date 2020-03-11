@@ -138,13 +138,13 @@ class DataSource:
             if not db.isOpen():
                 db.open()
             query = QSqlQuery(db=db)
-            query.prepare("SELECT * FROM forums;")
+            query.prepare("SELECT *, c.title as ctitle FROM forums as f INNER JOIN categories as c ON f.category=c.id;")
             query.exec_()
             forums = []
             while query.next():
                 forum: Dict[str, Optional[Any]] = {}
                 forum['id'] = query.value('id')
-                forum['category'] = query.value('category')
+                forum['category'] = query.value('ctitle')
                 forum['title'] = query.value('title')
                 forums.append(forum)
             return forums

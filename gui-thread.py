@@ -91,7 +91,6 @@ class ForumsModel(QAbstractTableModel):
         return 2
 
     def data(self, index, role=None):
-        print("data: {}, {}".format(index, role))
         if not index.isValid():
             return None
         if role == Qt.DisplayRole:
@@ -103,7 +102,6 @@ class ForumsModel(QAbstractTableModel):
         return None
 
     def headerData(self, section, orientation, role=None):
-        print("headerData: {}, {}, {}".format(section, orientation, role))
         if role != Qt.DisplayRole:
             return None
         if orientation == Qt.Vertical:
@@ -115,7 +113,6 @@ class ForumsModel(QAbstractTableModel):
                 return "Title"
 
     def rowCount(self, parent=None, *args, **kwargs):
-        print("rowCount: {}".format(parent))
         return len(self.forums)
 
     def __init__(self, forums):

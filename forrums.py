@@ -52,7 +52,7 @@ def store(forum):
 
 
 r = [560, 794, 793, 556, 436, 969, 2307, 2308, 2309, 2310, 2311, 557, 558]
-for i in range(0, 100):
+for i in range(1950, 3000):
     forum = get_forum(i)
     if forum[2]:
         print(forum)

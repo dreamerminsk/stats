@@ -48,6 +48,6 @@ for cat in db.execute('select * from categories'):
                     'insert into forums_rss(id, delta, last_scanned) values(?, 3600, datetime("now", "-1 year"))',
                     (ps['f'][0],))
                 db.commit()
-                fs.remove(ps['f'][0])
+                # fs.remove(ps['f'][0])
 
 db.close()

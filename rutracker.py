@@ -1,7 +1,7 @@
 ﻿import pickle
+import threading
 from datetime import datetime
 from urllib.parse import urlparse, parse_qs
-import threading
 
 import requests
 from bs4 import BeautifulSoup
@@ -60,32 +60,30 @@ def get_page(ref):
     try:
         r = s.get(ref, timeout=24)
         doc = BeautifulSoup(r.text, 'html.parser')
-        return (doc, None)
+        return doc, None
     except Exception as ex:
-        return (None, ex)
-    
-    
-class WebClient():
+        return None, ex
+
+
+class WebClient:
     __lock__ = threading.RLock()
     __session__ = requests.Session()
 
     def __init__(self):
         WebClient.__session__.cookies = self.load_cookies()
 
-    #def get_page(self, ref):
+    # def get_page(self, ref):
     #    with __lock__:
     #        r = WebClient.__session__.get(ref, timeout=24)
     #        doc = BeautifulSoup(r.text, 'html.parser')
     #        return (doc, None)
     #    except Exception as ex:
     #        return (None, ex)    
-    
-    
+
     def load_cookies(self):
         with open('cookie.dat', 'rb') as f:
             cookies = pickle.load(f)
         return cookies
-
 
     def save_cookies(self, cookies):
         with open('cookie.dat', 'wb') as f:
@@ -117,6 +115,7 @@ def get_user(id):
     url = USER_URL + str(id)
     return get_page(url)
 
+
 def get_user2(user_id):
     url = USER_URL + str(user_id)
     doc, error = get_page(url)
@@ -128,7 +127,7 @@ def get_user2(user_id):
 
 
 class UserParser:
-    
+
     @staticmethod
     def get_title(doc):
         title = None
@@ -159,15 +158,14 @@ class UserParser:
 
     @staticmethod
     def parse(doc):
-        u = {}
-        u['name'] = UserParser.get_title(doc)
-        u['registered'] = UserParser.get_registered(doc)
-        u['nation'] = UserParser.get_nation(doc)
+        u = {'name': UserParser.get_title(doc),
+             'registered': UserParser.get_registered(doc),
+             'nation': UserParser.get_nation(doc)}
         return u
 
 
 class TopicParser:
-    
+
     @staticmethod
     def get_message(doc):
         title = None

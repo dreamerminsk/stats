@@ -1,7 +1,9 @@
 import sys
 
 from PySide2.QtCore import QSettings, QPoint, QSize, Qt
-from PySide2.QtWidgets import QApplication, QStyleFactory, QMainWindow, QVBoxLayout, QLabel, QScrollArea
+from PySide2.QtGui import QFont
+from PySide2.QtWidgets import QApplication, QStyleFactory, QMainWindow, QScrollArea, QGridLayout, \
+    QWidget, QPushButton
 
 from source import DataSource
 
@@ -14,12 +16,15 @@ class MainWindow(QMainWindow):
         self.move(self.settings.value('main/pos', QPoint(200, 200)))
         self.ds = DataSource()
         cats = self.ds.get_categories()
-        self.layout = QVBoxLayout()
+        self.layout = QGridLayout()
+        list_cats = QWidget()
+        list_cats.setLayout(self.layout)
         self.content = QScrollArea()
-        self.content.setLayout(self.layout)
-        for cat in cats:
-            lbl = QLabel(cat['title'])
-            self.layout.addWidget(lbl, 1, Qt.AlignTop)
+        for row, cat in enumerate(cats):
+            lbl = QPushButton(cat['title'])
+            lbl.setFont(QFont(pointSize=70))
+            self.layout.addWidget(lbl, row, 0, Qt.AlignTop)
+        self.content.setViewport(list_cats)
         self.setCentralWidget(self.content)
 
     def closeEvent(self, event):

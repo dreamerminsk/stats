@@ -1,3 +1,5 @@
+from urllib.parse import urlparse, parse_qsl
+
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -12,7 +14,9 @@ class Category(Base):
 
     @classmethod
     def parse(cls, html):
-        c = Category(id=1, name=html.text)
+        query = urlparse(html.get("href")).query
+        params = dict(parse_qsl(query))
+        c = Category(id=params["c"], name=html.text)
         return c
 
     def __repr__(self):

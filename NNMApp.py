@@ -8,6 +8,8 @@ from PySide2.QtGui import QIcon, QPixmap
 from PySide2.QtWidgets import QApplication, QStyleFactory, QMainWindow, QSplitter, QListView
 from bs4 import BeautifulSoup
 
+from nnmclub.models import Category
+
 
 class CatModel(QAbstractListModel):
     cats = list()
@@ -19,7 +21,7 @@ class CatModel(QAbstractListModel):
         if not index.isValid():
             return None
         if role == Qt.DisplayRole:
-            return self.cats[index.row()]
+            return "{} - {}".format(self.cats[index.row()].id, self.cats[index.row()].name)
         return None
 
     def rowCount(self, parent=None):
@@ -32,6 +34,21 @@ class CatModel(QAbstractListModel):
 
     def __init__(self):
         super().__init__()
+
+
+async def get_cats(ref):
+    urls = []
+    s = requests.Session()
+    try:
+        r = s.get(ref, timeout=24)
+        d = BeautifulSoup(r.text, 'html.parser')
+        tables = d.select("td.leftnav > table.pline")
+        for href in tables[1].select("td.row1 a.genmed"):
+            urls.append(Category.parse(href))
+        return urls
+    except Exception as exc:
+        print(exc)
+        return None
 
 
 class MainWindow(QMainWindow):
@@ -63,26 +80,11 @@ class MainWindow(QMainWindow):
         ioloop.close()
 
     async def load(self):
-        tasks = [asyncio.ensure_future((self.get_cats("http://nnmclub.to/")))]
+        tasks = [asyncio.ensure_future((get_cats("http://nnmclub.to/")))]
         done, pending = await asyncio.wait(tasks, return_when=FIRST_COMPLETED)
         cats = done.pop().result()
         for cat in cats:
             self.cat_model.add(cat)
-
-    async def get_cats(self, ref):
-        urls = []
-        s = requests.Session()
-        try:
-            r = s.get(ref, timeout=24)
-            d = BeautifulSoup(r.text, 'html.parser')
-            tables = d.select("td.leftnav > table.pline")
-            for href in tables[1].select("td.row1 a.genmed"):
-                urls.append(href.text)
-                print(href.text)
-            return urls
-        except Exception as exc:
-            print(exc)
-            return None
 
     def closeEvent(self, event):
         self.settings.setValue('main/size', self.size())

@@ -104,11 +104,11 @@ def get_topic2(topic_id):
     url = TOPIC_URL + str(topic_id)
     doc, error = get_page(url)
     if error is not None:
-        return (None, error)
+        return None, error
     parser = TopicParser()
     topic = parser.parse(doc)
     topic['id'] = topic_id
-    return (topic, None)
+    return topic, None
 
 
 def get_user(id):
@@ -120,10 +120,10 @@ def get_user2(user_id):
     url = USER_URL + str(user_id)
     doc, error = get_page(url)
     if error is not None:
-        return (None, error)
+        return None, error
     user = UserParser.parse(doc)
     user['id'] = user_id
-    return (user, None)
+    return user, None
 
 
 class UserParser:

@@ -6,7 +6,7 @@ import requests
 from PySide2.QtCore import QObject, Signal
 from bs4 import BeautifulSoup
 
-import rutracker
+from rutracker.api import get_topic2, get_user2
 from source import DataSource
 
 
@@ -100,7 +100,7 @@ class NewTorrentWorker(QObject):
         t = self.ds.get_torrent()
         if 'id' not in t:
             return
-        topic, error = rutracker.get_topic2(t['id'])
+        topic, error = get_topic2(t['id'])
         if error is not None:
             print(error)
             return
@@ -135,7 +135,7 @@ class UpdateTorrentWorker(QObject):
         t = self.ds.get_check_torrent()
         if 'id' not in t:
             return
-        topic, error = rutracker.get_topic2(t['id'])
+        topic, error = get_topic2(t['id'])
         if error is not None:
             self.torrents += 1
             self.processed.emit(topic)
@@ -195,7 +195,7 @@ class UpdateUserWorker(QObject):
             return
         if u['id'] == '':
             return
-        user, error = rutracker.get_user2(u['id'])
+        user, error = get_user2(u['id'])
         if error is not None:
             print(error)
             return

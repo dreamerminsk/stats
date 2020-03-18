@@ -1,14 +1,42 @@
 import asyncio
 import sys
+from concurrent.futures import FIRST_COMPLETED
 
 import requests
-from PySide2.QtCore import QSettings, QPoint, QSize
+from PySide2.QtCore import QSettings, QPoint, QSize, QAbstractListModel, Qt, QTimer
 from PySide2.QtGui import QIcon, QPixmap
-from PySide2.QtWidgets import QApplication, QStyleFactory, QMainWindow, QSplitter, QListWidget
+from PySide2.QtWidgets import QApplication, QStyleFactory, QMainWindow, QSplitter, QListView
 from bs4 import BeautifulSoup
 
 
+class CatModel(QAbstractListModel):
+    cats = list()
+
+    def columnCount(self, parent=None):
+        return 0
+
+    def data(self, index, role=None):
+        if not index.isValid():
+            return None
+        if role == Qt.DisplayRole:
+            return self.cats[index.row()]
+        return None
+
+    def rowCount(self, parent=None):
+        return len(self.cats)
+
+    def add(self, cat):
+        self.beginResetModel()
+        self.cats.append(cat)
+        self.endResetModel()
+
+    def __init__(self):
+        super().__init__()
+
+
 class MainWindow(QMainWindow):
+    cat_model = CatModel()
+
     def __init__(self):
         QMainWindow.__init__(self)
         icon = QIcon()
@@ -21,17 +49,25 @@ class MainWindow(QMainWindow):
         self.move(self.settings.value('main/pos', QPoint(200, 200)))
 
         self.splitter = QSplitter()
-        self.splitter.addWidget(QListWidget())
+        self.cat_view = QListView()
+        self.cat_view.setModel(self.cat_model)
+        self.splitter.addWidget(self.cat_view)
         self.setCentralWidget(self.splitter)
 
+        self.timer = QTimer()
+        self.timer.singleShot(1000, self.load_task)
+
+    def load_task(self):
         ioloop = asyncio.get_event_loop()
-        tasks = [ioloop.create_task(self.coro("http://nnmclub.to/"))]
-        wait_tasks = asyncio.wait(tasks)
-        ioloop.run_until_complete(wait_tasks)
+        ioloop.run_until_complete(self.load())
         ioloop.close()
 
-    def load(self):
-        print("LOADED")
+    async def load(self):
+        tasks = [asyncio.ensure_future((self.coro("http://nnmclub.to/")))]
+        done, pending = await asyncio.wait(tasks, return_when=FIRST_COMPLETED)
+        cats = done.pop().result()
+        for cat in cats:
+            self.cat_model.add(cat)
 
     async def coro(self, ref):
         urls = []

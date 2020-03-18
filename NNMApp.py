@@ -55,7 +55,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.splitter)
 
         self.timer = QTimer()
-        self.timer.singleShot(1000, self.load_task)
+        self.timer.singleShot(0, self.load_task)
 
     def load_task(self):
         ioloop = asyncio.get_event_loop()
@@ -63,13 +63,13 @@ class MainWindow(QMainWindow):
         ioloop.close()
 
     async def load(self):
-        tasks = [asyncio.ensure_future((self.coro("http://nnmclub.to/")))]
+        tasks = [asyncio.ensure_future((self.get_cats("http://nnmclub.to/")))]
         done, pending = await asyncio.wait(tasks, return_when=FIRST_COMPLETED)
         cats = done.pop().result()
         for cat in cats:
             self.cat_model.add(cat)
 
-    async def coro(self, ref):
+    async def get_cats(self, ref):
         urls = []
         s = requests.Session()
         try:

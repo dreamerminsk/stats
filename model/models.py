@@ -429,7 +429,6 @@ class NewTorrentModel(QAbstractItemModel):
                 return self.createIndex(row, column, childItem)
             else:
                 return QModelIndex()
-        return QModelIndex()
 
     def insertRow(self, row, parent=None, *args, **kwargs):
         pass
@@ -445,7 +444,7 @@ class NewTorrentModel(QAbstractItemModel):
             return QModelIndex()
         childItem = child.internalPointer()
         parentItem = childItem.parent()
-        if (parentItem == None):
+        if parentItem is None:
             return QModelIndex()
         return self.createIndex(parentItem.row(), 0, parentItem)
 
@@ -484,7 +483,7 @@ class NewTorrentModel(QAbstractItemModel):
 
     def update_path(self, p):
         cur = p
-        while cur.parent() != None:
+        while cur.parent() is not None:
             self.dataChanged.emit(self.createIndex(cur.row(), 0, cur), self.createIndex(cur.row(), 1, cur))
             cur = cur.parent()
 

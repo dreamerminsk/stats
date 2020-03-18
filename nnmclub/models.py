@@ -10,5 +10,10 @@ class Category(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String)
 
+    @classmethod
+    def parse(cls, html):
+        c = Category(id=1, name=html.text)
+        return c
+
     def __repr__(self):
         return "<Category(id='%s', name='%s')>" % (self.id, self.name)

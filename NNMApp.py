@@ -5,7 +5,7 @@ from concurrent.futures import FIRST_COMPLETED
 import requests
 from PySide2.QtCore import QSettings, QPoint, QSize, QAbstractListModel, Qt, QTimer
 from PySide2.QtGui import QIcon, QPixmap
-from PySide2.QtWidgets import QApplication, QStyleFactory, QMainWindow, QSplitter, QListView
+from PySide2.QtWidgets import QApplication, QStyleFactory, QMainWindow, QSplitter, QListView, QWidget
 from bs4 import BeautifulSoup
 
 from nnmclub.models import Category
@@ -21,7 +21,7 @@ class CatModel(QAbstractListModel):
         if not index.isValid():
             return None
         if role == Qt.DisplayRole:
-            return "{} - {}".format(self.cats[index.row()].id, self.cats[index.row()].name)
+            return "{}".format(self.cats[index.row()].name)
         return None
 
     def rowCount(self, parent=None):
@@ -67,12 +67,17 @@ class MainWindow(QMainWindow):
 
         self.splitter = QSplitter()
         self.cat_view = QListView()
+        self.cat_view.setStyleSheet("QListView{font: bold 12px;}")
+        self.cat_view.clicked.connect(self.listViewClick)
         self.cat_view.setModel(self.cat_model)
         self.splitter.addWidget(self.cat_view)
+
+        self.content = QWidget()
+        self.splitter.addWidget(self.content)
         self.setCentralWidget(self.splitter)
 
         self.timer = QTimer()
-        self.timer.singleShot(0, self.load_task)
+        self.timer.singleShot(1000, self.load_task)
 
     def load_task(self):
         ioloop = asyncio.get_event_loop()
@@ -85,6 +90,10 @@ class MainWindow(QMainWindow):
         cats = done.pop().result()
         for cat in cats:
             self.cat_model.add(cat)
+
+    def listViewClick(self, index):
+        cat = self.cat_model.cats[index.row()]
+        self.setWindowTitle("NoNaMe Club / " + cat.name)
 
     def closeEvent(self, event):
         self.settings.setValue('main/size', self.size())

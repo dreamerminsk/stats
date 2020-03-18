@@ -1,8 +1,11 @@
+import asyncio
 import sys
 
+import requests
 from PySide2.QtCore import QSettings, QPoint, QSize
 from PySide2.QtGui import QIcon, QPixmap
-from PySide2.QtWidgets import QApplication, QStyleFactory, QMainWindow, QLabel, QFrame, QSplitter, QListWidget
+from PySide2.QtWidgets import QApplication, QStyleFactory, QMainWindow, QSplitter, QListWidget
+from bs4 import BeautifulSoup
 
 
 class MainWindow(QMainWindow):
@@ -21,10 +24,29 @@ class MainWindow(QMainWindow):
         self.splitter.addWidget(QListWidget())
         self.setCentralWidget(self.splitter)
 
-    def createLabel(self, text):
-        label = QLabel(text)
-        label.setFrameStyle(QFrame.Box | QFrame.Raised)
-        return label
+        ioloop = asyncio.get_event_loop()
+        tasks = [ioloop.create_task(self.coro("http://nnmclub.to/"))]
+        wait_tasks = asyncio.wait(tasks)
+        ioloop.run_until_complete(wait_tasks)
+        ioloop.close()
+
+    def load(self):
+        print("LOADED")
+
+    async def coro(self, ref):
+        urls = []
+        s = requests.Session()
+        try:
+            r = s.get(ref, timeout=24)
+            d = BeautifulSoup(r.text, 'html.parser')
+            tables = d.select("td.leftnav > table.pline")
+            for href in tables[1].select("td.row1 a.genmed"):
+                urls.append(href.text)
+                print(href.text)
+            return urls
+        except Exception as exc:
+            print(exc)
+            return None
 
     def closeEvent(self, event):
         self.settings.setValue('main/size', self.size())

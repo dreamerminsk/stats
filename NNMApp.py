@@ -5,7 +5,8 @@ from concurrent.futures import FIRST_COMPLETED
 import requests
 from PySide2.QtCore import QSettings, QPoint, QSize, QAbstractListModel, Qt, QTimer
 from PySide2.QtGui import QIcon, QPixmap
-from PySide2.QtWidgets import QApplication, QStyleFactory, QMainWindow, QSplitter, QListView, QWidget
+from PySide2.QtWidgets import QApplication, QStyleFactory, QMainWindow, QSplitter, QListView, QWidget, QScrollArea, \
+    QGridLayout, QLabel
 from bs4 import BeautifulSoup
 
 from nnmclub.models import Category
@@ -72,7 +73,13 @@ class MainWindow(QMainWindow):
         self.cat_view.setModel(self.cat_model)
         self.splitter.addWidget(self.cat_view)
 
-        self.content = QWidget()
+        self.content = QScrollArea()
+        self.torrents_list_view = QWidget()
+        layout = QGridLayout()
+        for i in range(100):
+            layout.addWidget(QLabel("TORRENT {}".format(i)), i, 0)
+        self.torrents_list_view.setLayout(layout)
+        self.content.setWidget(self.torrents_list_view)
         self.splitter.addWidget(self.content)
         self.setCentralWidget(self.splitter)
 

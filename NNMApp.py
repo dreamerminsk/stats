@@ -10,8 +10,8 @@ from PySide2.QtWidgets import QApplication, QStyleFactory, QMainWindow, QSplitte
 from nnmclub.parser import get_forums, get_torrents
 
 
-class CatModel(QAbstractListModel):
-    cats = list()
+class ForumModel(QAbstractListModel):
+    forums = list()
 
     def columnCount(self, parent=None):
         return 0
@@ -20,15 +20,15 @@ class CatModel(QAbstractListModel):
         if not index.isValid():
             return None
         if role == Qt.DisplayRole:
-            return "{}".format(self.cats[index.row()].name)
+            return "{}".format(self.forums[index.row()].name)
         return None
 
     def rowCount(self, parent=None):
-        return len(self.cats)
+        return len(self.forums)
 
-    def add(self, cat):
+    def add(self, forum):
         self.beginResetModel()
-        self.cats.append(cat)
+        self.forums.append(forum)
         self.endResetModel()
 
     def __init__(self):
@@ -36,7 +36,7 @@ class CatModel(QAbstractListModel):
 
 
 class MainWindow(QMainWindow):
-    cat_model = CatModel()
+    forum_model = ForumModel()
 
     def __init__(self):
         QMainWindow.__init__(self)
@@ -51,11 +51,11 @@ class MainWindow(QMainWindow):
         self.move(self.settings.value('main/pos', QPoint(200, 200)))
 
         self.splitter = QSplitter()
-        self.cat_view = QListView()
-        self.cat_view.setStyleSheet("QListView{font: bold 12px;}")
-        self.cat_view.clicked.connect(self.listViewClick)
-        self.cat_view.setModel(self.cat_model)
-        self.splitter.addWidget(self.cat_view)
+        self.forum_view = QListView()
+        self.forum_view.setStyleSheet("QListView{font: bold 12px;}")
+        self.forum_view.clicked.connect(self.listViewClick)
+        self.forum_view.setModel(self.forum_model)
+        self.splitter.addWidget(self.forum_view)
 
         self.content = QScrollArea()
         self.torrents_list_view = QWidget()
@@ -76,9 +76,9 @@ class MainWindow(QMainWindow):
     async def load_forums(self):
         tasks = [asyncio.ensure_future((get_forums("http://nnmclub.to/")))]
         done, pending = await asyncio.wait(tasks, return_when=FIRST_COMPLETED)
-        cats = done.pop().result()
-        for cat in cats:
-            self.cat_model.add(cat)
+        forums = done.pop().result()
+        for forum in forums:
+            self.forum_model.add(forum)
 
     def load_torrents_task(self, forum):
         self.ioloop.run_until_complete(self.load_torrents(forum))
@@ -96,9 +96,9 @@ class MainWindow(QMainWindow):
         self.content.setWidget(self.torrents_list_view)
 
     def listViewClick(self, index):
-        cat = self.cat_model.cats[index.row()]
-        self.setWindowTitle("NoNaMe Club / " + cat.name)
-        self.timer.singleShot(1000, lambda: self.load_torrents_task(cat))
+        forum = self.forum_model.cats[index.row()]
+        self.setWindowTitle("NoNaMe Club / " + forum.name)
+        self.timer.singleShot(1000, lambda: self.load_torrents_task(forum))
 
     def closeEvent(self, event):
         self.settings.setValue('main/size', self.size())

@@ -6,7 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 
 
-class Category(Base):
+class Forum(Base):
     __tablename__ = 'categories'
 
     id = Column(Integer, primary_key=True)
@@ -16,8 +16,18 @@ class Category(Base):
     def parse(cls, html):
         query = urlparse(html.get("href")).query
         params = dict(parse_qsl(query))
-        c = Category(id=params["c"], name=html.text)
+        c = Forum(id=params["c"], name=html.text)
         return c
 
     def __repr__(self):
-        return "<Category(id='%s', name='%s')>" % (self.id, self.name)
+        return "<Forum(id='%s', name='%s')>" % (self.id, self.name)
+
+
+class Torrent(Base):
+    __tablename__ = 'topics'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+
+    def __repr__(self):
+        return "<Topic(id='%s', name='%s')>" % (self.id, self.name)

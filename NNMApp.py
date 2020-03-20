@@ -7,7 +7,7 @@ from PySide2.QtGui import QIcon, QPixmap
 from PySide2.QtWidgets import QApplication, QStyleFactory, QMainWindow, QSplitter, QListView, QWidget, QScrollArea, \
     QGridLayout, QLabel
 
-from nnmclub.parser import get_forums
+from nnmclub.parser import get_forums, get_torrents
 
 
 class CatModel(QAbstractListModel):
@@ -40,6 +40,7 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         QMainWindow.__init__(self)
+        self.ioloop = asyncio.get_event_loop()
         icon = QIcon()
         icon.addPixmap(QPixmap("images/favicon.ico"), QIcon.Normal)
         self.setWindowIcon(icon)
@@ -70,9 +71,7 @@ class MainWindow(QMainWindow):
         self.timer.singleShot(1000, self.load_task)
 
     def load_task(self):
-        ioloop = asyncio.get_event_loop()
-        ioloop.run_until_complete(self.load_forums())
-        ioloop.close()
+        self.ioloop.run_until_complete(self.load_forums())
 
     async def load_forums(self):
         tasks = [asyncio.ensure_future((get_forums("http://nnmclub.to/")))]
@@ -81,13 +80,30 @@ class MainWindow(QMainWindow):
         for cat in cats:
             self.cat_model.add(cat)
 
+    def load_torrents_task(self, forum):
+        self.ioloop.run_until_complete(self.load_torrents(forum))
+
+    async def load_torrents(self, forum):
+        tasks = [asyncio.ensure_future((get_torrents(forum)))]
+        done, pending = await asyncio.wait(tasks, return_when=FIRST_COMPLETED)
+        cats = done.pop().result()
+        l = QGridLayout()
+        for i, cat in enumerate(cats):
+            print(cat)
+            l.addWidget(QLabel("{}".format(cat.name)), i, 0)
+        self.torrents_list_view = QWidget()
+        self.torrents_list_view.setLayout(l)
+        self.content.setWidget(self.torrents_list_view)
+
     def listViewClick(self, index):
         cat = self.cat_model.cats[index.row()]
         self.setWindowTitle("NoNaMe Club / " + cat.name)
+        self.timer.singleShot(1000, lambda: self.load_torrents_task(cat))
 
     def closeEvent(self, event):
         self.settings.setValue('main/size', self.size())
         self.settings.setValue('main/pos', self.pos())
+        self.ioloop.close()
 
 
 if __name__ == "__main__":

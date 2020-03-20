@@ -2,14 +2,12 @@ import asyncio
 import sys
 from concurrent.futures import FIRST_COMPLETED
 
-import requests
 from PySide2.QtCore import QSettings, QPoint, QSize, QAbstractListModel, Qt, QTimer
 from PySide2.QtGui import QIcon, QPixmap
 from PySide2.QtWidgets import QApplication, QStyleFactory, QMainWindow, QSplitter, QListView, QWidget, QScrollArea, \
     QGridLayout, QLabel
-from bs4 import BeautifulSoup
 
-from nnmclub.models import Category
+from nnmclub.parser import get_cats
 
 
 class CatModel(QAbstractListModel):
@@ -35,21 +33,6 @@ class CatModel(QAbstractListModel):
 
     def __init__(self):
         super().__init__()
-
-
-async def get_cats(ref):
-    urls = []
-    s = requests.Session()
-    try:
-        r = s.get(ref, timeout=24)
-        d = BeautifulSoup(r.text, 'html.parser')
-        tables = d.select("td.leftnav > table.pline")
-        for href in tables[1].select("td.row1 a.genmed"):
-            urls.append(Category.parse(href))
-        return urls
-    except Exception as exc:
-        print(exc)
-        return None
 
 
 class MainWindow(QMainWindow):
@@ -88,10 +71,10 @@ class MainWindow(QMainWindow):
 
     def load_task(self):
         ioloop = asyncio.get_event_loop()
-        ioloop.run_until_complete(self.load())
+        ioloop.run_until_complete(self.load_forums())
         ioloop.close()
 
-    async def load(self):
+    async def load_forums(self):
         tasks = [asyncio.ensure_future((get_cats("http://nnmclub.to/")))]
         done, pending = await asyncio.wait(tasks, return_when=FIRST_COMPLETED)
         cats = done.pop().result()

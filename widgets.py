@@ -1,0 +1,3 @@
+class TopicView(QWidget):
+    pass
+

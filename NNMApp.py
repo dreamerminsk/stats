@@ -7,7 +7,7 @@ from PySide2.QtGui import QIcon, QPixmap
 from PySide2.QtWidgets import QApplication, QStyleFactory, QMainWindow, QSplitter, QListView, QWidget, QScrollArea, \
     QGridLayout, QLabel
 
-from nnmclub.parser import get_cats
+from nnmclub.parser import get_forums
 
 
 class CatModel(QAbstractListModel):
@@ -75,7 +75,7 @@ class MainWindow(QMainWindow):
         ioloop.close()
 
     async def load_forums(self):
-        tasks = [asyncio.ensure_future((get_cats("http://nnmclub.to/")))]
+        tasks = [asyncio.ensure_future((get_forums("http://nnmclub.to/")))]
         done, pending = await asyncio.wait(tasks, return_when=FIRST_COMPLETED)
         cats = done.pop().result()
         for cat in cats:

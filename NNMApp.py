@@ -7,6 +7,7 @@ from PySide2.QtGui import QIcon, QPixmap
 from PySide2.QtWidgets import QApplication, QStyleFactory, QMainWindow, QSplitter, QListView, QWidget, QScrollArea, \
     QGridLayout
 
+from nnmclub.models import Forum
 from nnmclub.parser import get_forums, get_topics
 from nnmclub.widgets import TopicView
 
@@ -41,10 +42,13 @@ class ForumModel(QAbstractListModel):
 
 
 class MainWindow(QMainWindow):
+    forum = Forum(id=-1, name="UNKNOWN")
+    topics = []
     forum_model = ForumModel()
 
     def __init__(self):
         QMainWindow.__init__(self)
+        self.contentMax = 0
         self.ioloop = asyncio.get_event_loop()
         icon = QIcon()
         icon.addPixmap(QPixmap(FAVICON_ICO), QIcon.Normal)
@@ -63,16 +67,18 @@ class MainWindow(QMainWindow):
         self.splitter.addWidget(self.forum_view)
 
         self.content = QScrollArea()
+        self.content.verticalScrollBar().valueChanged.connect(self.scrollBarChanged)
+        self.content.verticalScrollBar().rangeChanged.connect(self.rangeChanged)
         self.torrents_list_view = QWidget()
         layout = QGridLayout()
         self.torrents_list_view.setLayout(layout)
         self.content.setWidget(self.torrents_list_view)
         self.splitter.addWidget(self.content)
-        self.splitter.setSizes([200, 400])
+        self.splitter.setSizes([160, 350])
         self.setCentralWidget(self.splitter)
 
         self.timer = QTimer()
-        self.timer.singleShot(1000, self.load_task)
+        self.timer.singleShot(1600, self.load_task)
 
     def load_task(self):
         self.ioloop.run_until_complete(self.load_forums())
@@ -84,25 +90,40 @@ class MainWindow(QMainWindow):
         for forum in forums:
             self.forum_model.add(forum)
 
-    def load_torrents_task(self, forum):
-        self.ioloop.run_until_complete(self.load_torrents(forum))
+    def load_torrents_task(self, forum, start):
+        self.ioloop.run_until_complete(self.load_torrents(forum, start))
 
-    async def load_torrents(self, forum):
-        tasks = [asyncio.ensure_future((get_topics(forum)))]
+    async def load_torrents(self, forum, start=0):
+        tasks = [asyncio.ensure_future((get_topics(forum, start)))]
         done, pending = await asyncio.wait(tasks, return_when=FIRST_COMPLETED)
-        cats = done.pop().result()
-        l = QGridLayout()
-        cats.sort(key=lambda x: x.likes, reverse=True)
-        for i, cat in enumerate(cats):
-            l.addWidget(TopicView(cat), i, 0)
+        if start == 0:
+            self.topics = done.pop().result()
+        else:
+            self.topics = self.topics + done.pop().result()
+        layout = QGridLayout()
+        self.topics.sort(key=lambda x: x.likes, reverse=True)
+        for i, topic in enumerate(self.topics):
+            print("{}. {}".format(i, topic))
+            layout.addWidget(TopicView(topic), i, 0)
         self.torrents_list_view = QWidget()
-        self.torrents_list_view.setLayout(l)
+        self.torrents_list_view.setLayout(layout)
         self.content.setWidget(self.torrents_list_view)
 
+    def rangeChanged(self, vert_min, vert_max):
+        self.contentMax = vert_max
+
+    def scrollBarChanged(self, value):
+        if value == self.contentMax:
+            print("LOADING {}".format(self.torrents_list_view.children()))
+            self.timer.singleShot(1000, lambda: self.load_torrents_task(self.forum, len(self.topics)))
+
     def listViewClick(self, index):
-        forum = self.forum_model.forums[index.row()]
-        self.setWindowTitle("{} / {}".format(APP_TITLE, forum.name))
-        self.timer.singleShot(1000, lambda: self.load_torrents_task(forum))
+        self.forum = self.forum_model.forums[index.row()]
+        self.topics = []
+        self.setWindowTitle("{} / {}".format(APP_TITLE, self.forum.name))
+        # self.timer.singleShot(1000, lambda: self.load_torrents_task(self.forum, 0))
+        self.timer.timeout.connect(lambda: self.load_torrents_task(self.forum, len(self.topics)))
+        self.timer.start(8000)
 
     def closeEvent(self, event):
         self.settings.setValue('main/size', self.size())

@@ -19,11 +19,13 @@ async def get_forums(ref):
         return None
 
 
-async def get_topics(forum):
+async def get_topics(forum, start=0):
     topics = []
     s = requests.Session()
     try:
         ref = "http://nnmclub.to/forum/portal.php?c={}".format(forum.id)
+        if start > 0:
+            ref = "{}&start={}".format(ref, start)
         r = s.get(ref, timeout=24)
         d = BeautifulSoup(r.text, 'html.parser')
         tables = d.select("table.pline")

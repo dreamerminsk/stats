@@ -5,9 +5,14 @@ from concurrent.futures import FIRST_COMPLETED
 from PySide2.QtCore import QSettings, QPoint, QSize, QAbstractListModel, Qt, QTimer
 from PySide2.QtGui import QIcon, QPixmap
 from PySide2.QtWidgets import QApplication, QStyleFactory, QMainWindow, QSplitter, QListView, QWidget, QScrollArea, \
-    QGridLayout, QLabel
+    QGridLayout
 
 from nnmclub.parser import get_forums, get_torrents
+from nnmclub.widgets import TopicView
+
+APP_TITLE = "NoNaMe Club"
+
+FAVICON_ICO = "images/favicon.ico"
 
 
 class ForumModel(QAbstractListModel):
@@ -42,9 +47,9 @@ class MainWindow(QMainWindow):
         QMainWindow.__init__(self)
         self.ioloop = asyncio.get_event_loop()
         icon = QIcon()
-        icon.addPixmap(QPixmap("images/favicon.ico"), QIcon.Normal)
+        icon.addPixmap(QPixmap(FAVICON_ICO), QIcon.Normal)
         self.setWindowIcon(icon)
-        self.setWindowTitle("NoNaMe Club")
+        self.setWindowTitle(APP_TITLE)
 
         self.settings = QSettings('karoStudio', 'nnm-stats')
         self.resize(self.settings.value('main/size', QSize(640, 480)))
@@ -60,8 +65,6 @@ class MainWindow(QMainWindow):
         self.content = QScrollArea()
         self.torrents_list_view = QWidget()
         layout = QGridLayout()
-        for i in range(100):
-            layout.addWidget(QLabel("TORRENT {}".format(i)), i, 0)
         self.torrents_list_view.setLayout(layout)
         self.content.setWidget(self.torrents_list_view)
         self.splitter.addWidget(self.content)
@@ -89,15 +92,14 @@ class MainWindow(QMainWindow):
         cats = done.pop().result()
         l = QGridLayout()
         for i, cat in enumerate(cats):
-            print(cat)
-            l.addWidget(QLabel("{}".format(cat.name)), i, 0)
+            l.addWidget(TopicView(cat), i, 0)
         self.torrents_list_view = QWidget()
         self.torrents_list_view.setLayout(l)
         self.content.setWidget(self.torrents_list_view)
 
     def listViewClick(self, index):
-        forum = self.forum_model.cats[index.row()]
-        self.setWindowTitle("NoNaMe Club / " + forum.name)
+        forum = self.forum_model.forums[index.row()]
+        self.setWindowTitle("{} / {}".format(APP_TITLE, forum.name))
         self.timer.singleShot(1000, lambda: self.load_torrents_task(forum))
 
     def closeEvent(self, event):

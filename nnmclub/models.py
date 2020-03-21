@@ -23,11 +23,12 @@ class Forum(Base):
         return "<Forum(id='%s', name='%s')>" % (self.id, self.name)
 
 
-class Torrent(Base):
+class Topic(Base):
     __tablename__ = 'topics'
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
+    likes = Column(Integer)
 
     def __repr__(self):
-        return "<Topic(id='%s', name='%s')>" % (self.id, self.name)
+        return "<Topic(id='%s', name='%s', likes='%d')>" % (self.id, self.name, self.likes)

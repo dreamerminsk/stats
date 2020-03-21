@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 
-from nnmclub.models import Forum
+from nnmclub.models import Forum, Topic
 
 
 async def get_forums(ref):
@@ -18,8 +18,9 @@ async def get_forums(ref):
         print(exc)
         return None
 
-async def get_torrents(forum):
-    torrents = []
+
+async def get_topics(forum):
+    topics = []
     s = requests.Session()
     try:
         ref = "http://nnmclub.to/forum/portal.php?c={}".format(forum.id)
@@ -29,8 +30,16 @@ async def get_torrents(forum):
         for i, table in enumerate(tables):
             titles = table.select("td.pcatHead h2.substr a.pgenmed")
             if titles:
-                torrents.append(Forum(id=-1, name=titles[0].get("title")))
-        return torrents
+                topics.append(
+                    Topic(id=-1, name=titles[0].get("title"), likes=parse_likes(table)))
+        return topics
     except Exception as exc:
         print(exc)
         return None
+
+
+def parse_likes(table):
+    likes = table.select("span.pcomm.bold[id]")
+    if likes:
+        return int(likes[0].text)
+    return 0

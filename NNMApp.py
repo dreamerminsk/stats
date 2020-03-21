@@ -7,7 +7,7 @@ from PySide2.QtGui import QIcon, QPixmap
 from PySide2.QtWidgets import QApplication, QStyleFactory, QMainWindow, QSplitter, QListView, QWidget, QScrollArea, \
     QGridLayout
 
-from nnmclub.parser import get_forums, get_torrents
+from nnmclub.parser import get_forums, get_topics
 from nnmclub.widgets import TopicView
 
 APP_TITLE = "NoNaMe Club"
@@ -68,6 +68,7 @@ class MainWindow(QMainWindow):
         self.torrents_list_view.setLayout(layout)
         self.content.setWidget(self.torrents_list_view)
         self.splitter.addWidget(self.content)
+        self.splitter.setSizes([200, 400])
         self.setCentralWidget(self.splitter)
 
         self.timer = QTimer()
@@ -87,10 +88,11 @@ class MainWindow(QMainWindow):
         self.ioloop.run_until_complete(self.load_torrents(forum))
 
     async def load_torrents(self, forum):
-        tasks = [asyncio.ensure_future((get_torrents(forum)))]
+        tasks = [asyncio.ensure_future((get_topics(forum)))]
         done, pending = await asyncio.wait(tasks, return_when=FIRST_COMPLETED)
         cats = done.pop().result()
         l = QGridLayout()
+        cats.sort(key=lambda x: x.likes, reverse=True)
         for i, cat in enumerate(cats):
             l.addWidget(TopicView(cat), i, 0)
         self.torrents_list_view = QWidget()

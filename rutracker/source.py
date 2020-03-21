@@ -4,7 +4,7 @@ from typing import Optional, Dict, Any, List
 from PySide2.QtCore import QThread
 from PySide2.QtSql import QSqlDatabase, QSqlQuery
 
-_db = sqlite3.connect('video.db', detect_types=sqlite3.PARSE_DECLTYPES)
+_db = sqlite3.connect('..\\video.db', detect_types=sqlite3.PARSE_DECLTYPES)
 _db.row_factory = sqlite3.Row
 
 

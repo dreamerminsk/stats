@@ -8,8 +8,8 @@ from PySide2.QtWidgets import QWidget, QListWidget, QVBoxLayout, QSplitter, QTre
     QPlainTextEdit, QMainWindow, QTabWidget, QApplication, QStyleFactory
 
 from model.models import RssCategoryModel, NewTorrentModel
-from source import DataSource
-from workers import RssWorker, NewTorrentWorker, UpdateTorrentWorker, UpdateUserWorker
+from rutracker.source import DataSource
+from rutracker.workers import RssWorker, NewTorrentWorker, UpdateTorrentWorker, UpdateUserWorker
 
 
 class TorrentsTab(QWidget):

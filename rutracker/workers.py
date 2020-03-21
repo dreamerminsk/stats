@@ -7,7 +7,7 @@ from PySide2.QtCore import QObject, Signal
 from bs4 import BeautifulSoup
 
 from rutracker.api import get_topic2, get_user2
-from source import DataSource
+from rutracker.source import DataSource
 
 
 class RssWorker(QObject):

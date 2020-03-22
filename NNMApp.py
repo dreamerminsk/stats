@@ -89,7 +89,7 @@ class MainWindow(QMainWindow):
         menu_splitter.addWidget(self.forum_view)
         menu_splitter.addWidget(self.date_view)
         scroll.setWidget(menu_splitter)
-        scroll.adjustSize()
+        scroll.setWidgetResizable(True)
         self.splitter.addWidget(scroll)
 
     def load_task(self):

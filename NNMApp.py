@@ -48,6 +48,8 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         QMainWindow.__init__(self)
+        self.date_view = QListView()
+        self.forum_view = QListView()
         self.contentMax = 0
         self.ioloop = asyncio.get_event_loop()
         icon = QIcon()
@@ -60,11 +62,7 @@ class MainWindow(QMainWindow):
         self.move(self.settings.value('main/pos', QPoint(200, 200)))
 
         self.splitter = QSplitter()
-        self.forum_view = QListView()
-        self.forum_view.setStyleSheet("QListView{font: bold 12px;}")
-        self.forum_view.clicked.connect(self.listViewClick)
-        self.forum_view.setModel(self.forum_model)
-        self.splitter.addWidget(self.forum_view)
+        self.get_menu()
 
         self.content = QScrollArea()
         self.content.verticalScrollBar().valueChanged.connect(self.scrollBarChanged)
@@ -80,6 +78,20 @@ class MainWindow(QMainWindow):
         self.timer = QTimer()
         self.timer.singleShot(1600, self.load_task)
 
+    def get_menu(self):
+        scroll = QScrollArea(self)
+        self.forum_view.setStyleSheet("QListView{font: bold 12px;}")
+        self.forum_view.clicked.connect(self.listViewClick)
+        self.forum_view.setModel(self.forum_model)
+
+        menu_splitter = QSplitter(self)
+        menu_splitter.setOrientation(Qt.Vertical)
+        menu_splitter.addWidget(self.forum_view)
+        menu_splitter.addWidget(self.date_view)
+        scroll.setWidget(menu_splitter)
+        scroll.adjustSize()
+        self.splitter.addWidget(scroll)
+
     def load_task(self):
         self.ioloop.run_until_complete(self.load_forums())
 
@@ -88,6 +100,7 @@ class MainWindow(QMainWindow):
         done, pending = await asyncio.wait(tasks, return_when=FIRST_COMPLETED)
         forums = done.pop().result()
         for forum in forums:
+            print(forum)
             self.forum_model.add(forum)
 
     def load_torrents_task(self, forum, start):

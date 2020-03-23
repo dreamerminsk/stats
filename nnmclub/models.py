@@ -1,6 +1,6 @@
 from urllib.parse import urlparse, parse_qsl
 
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
@@ -28,7 +28,9 @@ class Topic(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
+    published = Column(DateTime)
     likes = Column(Integer)
 
     def __repr__(self):
-        return "<Topic(id='%s', name='%s', likes='%d')>" % (self.id, self.name, self.likes)
+        return "<Topic(id='%s', name='%s', published='%s' likes='%d')>" % (
+        self.id, self.name, self.published, self.likes)

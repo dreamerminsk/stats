@@ -37,16 +37,22 @@ async def get_topics(forum, start=0):
         for i, table in enumerate(tables):
             titles = table.select("td.pcatHead h2.substr a.pgenmed")
             if titles:
-                for line in table.select("span.genmed"):
-                    parts = line.text.split("|")
-                    locale.setlocale(locale.LC_ALL, 'ru_RU')
-                    print("\tLINE: {} - {}".format(parts[1], datetime.strptime(parts[1].strip(), DATETIME_FORMAT)))
                 topics.append(
                     Topic(id=-1, name=titles[0].get("title"), likes=parse_likes(table)))
         return topics
     except Exception as exc:
         print(exc)
         return None
+
+
+def parse_published(table):
+    published: datetime = datetime(year=1, month=1, day=1, hour=0, minute=0, second=0)
+    for line in table.select("span.genmed"):
+        parts = line.text.split("|")
+        locale.setlocale(locale.LC_ALL, 'ru_RU')
+        published = datetime.strptime(parts[1].strip(), DATETIME_FORMAT)
+        print("\tLINE: {} - {}".format(parts[1], published))
+    return published
 
 
 def parse_likes(table):

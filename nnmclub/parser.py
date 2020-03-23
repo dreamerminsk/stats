@@ -1,7 +1,12 @@
+import locale
+from datetime import datetime
+
 import requests
 from bs4 import BeautifulSoup
 
 from nnmclub.models import Forum, Topic
+
+DATETIME_FORMAT = "%d %b %Y %H:%M:%S"
 
 
 async def get_forums(ref):
@@ -32,6 +37,10 @@ async def get_topics(forum, start=0):
         for i, table in enumerate(tables):
             titles = table.select("td.pcatHead h2.substr a.pgenmed")
             if titles:
+                for line in table.select("span.genmed"):
+                    parts = line.text.split("|")
+                    locale.setlocale(locale.LC_ALL, 'ru_RU')
+                    print("\tLINE: {} - {}".format(parts[1], datetime.strptime(parts[1].strip(), DATETIME_FORMAT)))
                 topics.append(
                     Topic(id=-1, name=titles[0].get("title"), likes=parse_likes(table)))
         return topics

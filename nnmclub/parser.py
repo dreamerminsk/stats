@@ -38,7 +38,8 @@ async def get_topics(forum, start=0):
             titles = table.select("td.pcatHead h2.substr a.pgenmed")
             if titles:
                 topics.append(
-                    Topic(id=-1, name=titles[0].get("title"), likes=parse_likes(table)))
+                    Topic(id=-1, name=titles[0].get("title"), published=parse_published(table),
+                          likes=parse_likes(table)))
         return topics
     except Exception as exc:
         print(exc)

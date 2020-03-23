@@ -41,10 +41,50 @@ class ForumModel(QAbstractListModel):
         super().__init__()
 
 
+class DayModel(QAbstractListModel):
+    days = []
+    days_stats = {}
+
+    def columnCount(self, parent=None):
+        return 0
+
+    def data(self, index, role=None):
+        if not index.isValid():
+            return None
+        if role == Qt.DisplayRole:
+            day = self.days[index.row()]
+            return "{} - {}".format(day, self.days_stats[day])
+        return None
+
+    def rowCount(self, parent=None):
+        return len(self.days_stats)
+
+    def add(self, day, stats):
+        self.beginResetModel()
+        if day not in self.days:
+            self.days.append(day)
+            self.days.sort()
+            self.days.reverse()
+        self.days_stats[day] = stats
+        self.endResetModel()
+
+    def clear(self):
+        self.beginResetModel()
+        for day in self.days_stats.keys():
+            self.days_stats[day] = {'count': 0, 'likes': 0}
+        self.days = []
+        self.days_stats = {}
+        self.endResetModel()
+
+    def __init__(self):
+        super().__init__()
+
+
 class MainWindow(QMainWindow):
     forum = Forum(id=-1, name="UNKNOWN")
     topics = []
     forum_model = ForumModel()
+    day_model = DayModel()
 
     def __init__(self):
         QMainWindow.__init__(self)
@@ -84,6 +124,10 @@ class MainWindow(QMainWindow):
         self.forum_view.clicked.connect(self.listViewClick)
         self.forum_view.setModel(self.forum_model)
 
+        self.date_view.setStyleSheet("QListView{font: bold 12px;}")
+        self.date_view.clicked.connect(self.listViewClick)
+        self.date_view.setModel(self.day_model)
+
         menu_splitter = QSplitter(self)
         menu_splitter.setOrientation(Qt.Vertical)
         menu_splitter.addWidget(self.forum_view)
@@ -115,9 +159,17 @@ class MainWindow(QMainWindow):
             self.topics = self.topics + done.pop().result()
         layout = QGridLayout()
         self.topics.sort(key=lambda x: x.likes, reverse=True)
+        days = {}
         for i, topic in enumerate(self.topics):
-            print("{}. {}".format(i, topic))
+            d = topic.published.date()
+            if d in days.keys():
+                days[d]['count'] += 1
+                days[d]['likes'] += topic.likes
+            else:
+                days[d] = {'count': 1, 'likes': topic.likes}
             layout.addWidget(TopicView(topic), i, 0)
+        for day in days.keys():
+            self.day_model.add(day, days[day])
         self.torrents_list_view = QWidget()
         self.torrents_list_view.setLayout(layout)
         self.content.setWidget(self.torrents_list_view)
@@ -134,6 +186,7 @@ class MainWindow(QMainWindow):
         self.forum = self.forum_model.forums[index.row()]
         self.topics = []
         self.setWindowTitle("{} / {}".format(APP_TITLE, self.forum.name))
+        self.day_model.clear()
         # self.timer.singleShot(1000, lambda: self.load_torrents_task(self.forum, 0))
         self.timer.timeout.connect(lambda: self.load_torrents_task(self.forum, len(self.topics)))
         self.timer.start(8000)

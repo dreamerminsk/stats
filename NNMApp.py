@@ -9,7 +9,6 @@ from PySide2.QtWidgets import QApplication, QStyleFactory, QMainWindow, QSplitte
 
 from nnmclub.models import Forum
 from nnmclub.parser import get_forums, get_topics
-from nnmclub.widgets import TopicView
 
 APP_TITLE = "NoNaMe Club"
 
@@ -167,7 +166,7 @@ class MainWindow(QMainWindow):
                 days[d]['likes'] += topic.likes
             else:
                 days[d] = {'count': 1, 'likes': topic.likes}
-            layout.addWidget(TopicView(topic), i, 0)
+            # layout.addWidget(TopicView(topic), i, 0)
         for day in days.keys():
             self.day_model.add(day, days[day])
         self.torrents_list_view = QWidget()
